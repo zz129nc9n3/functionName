@@ -221,6 +221,8 @@ local onlyIcePos = {
     CFrame.new(964.4, 6.7, -1391.2),
 }
 
+local tpinverval = 10
+
 --[[
 
 
@@ -2485,7 +2487,7 @@ local function TeleportLoop()
                 break
             end
         end
-        task.wait()
+        task.wait(tpinverval)
     end
 end
 
@@ -2686,6 +2688,19 @@ Teleports:AddSlider({
     ValueName = "studs/sec",
     Callback = function(Value)
         tptweenspeed = Value
+    end    
+})
+
+Teleports:AddSlider({
+    Name = "Tween Interval",
+    Min = 1,
+    Max = 60,
+    Default = 10,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 0.5,
+    ValueName = "secs",
+    Callback = function(Value)
+        tpinverval = Value
     end    
 })
 
