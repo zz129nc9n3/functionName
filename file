@@ -200,6 +200,8 @@ local showPoints = false
 
 local transportGold = false
 
+local isGoldFarm = false
+
 local BlacklistedItemsForFruits = {
     "Reinforced Chest",
     "Nest",
@@ -867,34 +869,20 @@ local function GetClosestCoin()
 end
 
 local function getClosestResource(name)
-    local closestCoin
-    local minDistance = 15
-    local maxDistance = 35
-    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local Items = game.Workspace:FindFirstChild("Resources")
+    local characterPosition = Players.LocalPlayer.Character:GetPivot().Position
+    local Parts = workspace:GetPartBoundsInRadius(characterPosition, 10)
+    local resources = {}
 
-    if not RootPart or not Items then
-        return nil
-    end
-
-    local PlayerPosition = RootPart.Position
-    for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
-
-            if item.Name == name then
-            local ItemPosition = item:GetPivot().Position
-            local Distance = (PlayerPosition - ItemPosition).Magnitude
-            if Distance < maxDistance then
-                minDistance = Distance
-                closestCoin = item
+    for _, Part in ipairs(Parts) do
+        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == name and Part.Parent:FindFirstChild("Health") then
+            if Part.Parent.Health ~= 0 then
+            table.insert(resources, Part.Parent)
             end
         end
-        end
     end
 
-    return closestCoin
+    return resources
 end
-
 
 local function getClosestDroppedItem()
     local closestItem
@@ -965,7 +953,7 @@ local function getClosestItem(name)
 
     local PlayerPosition = RootPart.Position
     for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
 
             if item.Name == name then
             local ItemPosition = item:GetPivot().Position
@@ -1029,7 +1017,7 @@ local function autoPickupItems(itemType)
                 PickUpItem(item2)
             end
         end
-        task.wait(0.05)
+        task.wait(0.01)
     end
 end
 
@@ -1243,113 +1231,9 @@ $$ |  $$ |$$ |  $$ |$$ |      $$ |  $$ |      $$ |      $$ |  $$ |$$ |  $$ |$$ |
 ]]
 local TweenService = game:GetService("TweenService")
 
-local function movePlayerToPosition(position)
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-local goal = {}
-goal.CFrame = CFrame.new(position)  -- Use Position to CFrame
-
-local tweenInfo = TweenInfo.new(
-    3, -- Time
-    Enum.EasingStyle.Linear, -- EasingStyle
-    Enum.EasingDirection.Out, -- EasingDirection
-    0, -- RepeatCount (0 = no repeat)
-    false, -- Reverses (tween does not reverse)
-    0 -- DelayTime
-)
-
-local tween = TweenService:Create(humanoidRootPart, tweenInfo, goal)
-tween:Play()
-tween.Completed:Wait()
-end
-
-local function goldFarm()
-local permChestPosition = nil
-local positionsToCheck = onlyIcePos
-
-while goldFarm_Enabled do
-    nodeAura = true
-
-    for _, node in ipairs(positionsToCheck) do
-        if not goldFarm_Enabled then break end
-        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            break
-        end
-
-        local humanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local tweenInfo = TweenInfo.new((humanoidRootPart.Position - node.Position).Magnitude / 16, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(node.Position)})
-        tween:Play()
-        tween.Completed:Wait()
-
-        if not goldFarm_Enabled then break end
-
-        local targetsCleared = false
-        while not targetsCleared and goldFarm_Enabled do
-            local region = Region3.new(node.Position - Vector3.new(10, 10, 10), node.Position + Vector3.new(10, 10, 10))
-            local parts = workspace:FindPartsInRegion3WithWhiteList(region, {workspace}, 100)
-
-            local targets = {}
-            for _, part in ipairs(parts) do
-                local parent = part.Parent
-                if parent and (parent.Name == "Ice Chunk" or parent.Name == "Gold Node") and parent:FindFirstChild("Health") then
-                    table.insert(targets, parent)
-                end
-            end
-
-            targetsCleared = true
-            for _, target in ipairs(targets) do
-                local health = target:FindFirstChild("Health")
-                if health and health.Value > 0 then
-                    targetsCleared = false
-                    task.wait()
-                end
-            end
-
-            if targetsCleared then
-                break
-            end
-            task.wait(0.1)
-        end
-    end
-
-    if not goldFarm_Enabled then break end
-
-    if not permChestPosition then
-        local chest = getClosestChest()
-        if chest then
-            permChestPosition = chest:GetPivot().Position + Vector3.new(0, 6, 0)
-            task.wait()
-        end
-    end
-
-    if permChestPosition then
-        local function isPlayerAtPosition(position)
-            local humanoidRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            return humanoidRootPart and (humanoidRootPart.Position - position).Magnitude < 2
-        end
-
-        while not isPlayerAtPosition(permChestPosition) and goldFarm_Enabled do
-            local humanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            local tweenInfo = TweenInfo.new((humanoidRootPart.Position - permChestPosition).Magnitude / 16, Enum.EasingStyle.Linear)
-            local tween = game:GetService("TweenService"):Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(permChestPosition)})
-            tween:Play()
-            tween.Completed:Wait()
-            task.wait(0.25)
-        end
-    end
-
-    if not goldFarm_Enabled then break end
-
-    powerCampfires()
-
-    task.wait(125)
-end
-
-nodeAura = false
-end
 
 local function GetClosestPress()
     local characterPosition = LocalPlayer.Character:GetPivot().Position
@@ -1435,25 +1319,6 @@ local function getClosestDeployable(name)
     return nearestCampfire
 end
 
-local function getClosestResource(name)
-    local characterPosition = LocalPlayer.Character:GetPivot().Position
-    local Parts = workspace.Resources:GetPartBoundsInRadius(characterPosition, 50)
-    local nearestCampfire = nil
-    local shortestDistance = math.huge
-
-    for _, Part in ipairs(Parts) do
-        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == name then
-            local distance = (Part.Position - characterPosition).Magnitude
-            if distance < shortestDistance then
-                shortestDistance = distance
-                nearestCampfire = Part.Parent
-            end
-        end
-    end
-
-    return nearestCampfire
-end
-
 --[[
 
 
@@ -1520,6 +1385,17 @@ Farming:AddToggle({
         end
     end
 })
+
+local chunkPos = {
+    Vector3.new(938.82, -2.39, -1428.10),
+    Vector3.new(938.82, -2.39, -1428.10),
+    Vector3.new(966.63, -3.00, -1391.91),
+    Vector3.new(966.63, -3.00, -1391.91),
+    Vector3.new(927.96, -2.66, -1370.94),
+    Vector3.new(927.96, -2.66, -1370.94),
+    Vector3.new(895.64, -0.98, -1421.98),
+    Vector3.new(895.64, -0.98, -1421.98)
+}
 
 local Section = Farming:AddSection({
     Name = "Auto Farm Settings"
@@ -1600,20 +1476,91 @@ Farming:AddSlider({
     end
 })
 
---[[local Section = Farming:AddSection({
+local Section = Farming:AddSection({
     Name = "Gold Farm"
 })
 
---Farming:AddToggle({
-    Name = "Gold Farm",
-    Default = false,
-    Callback = function(State)
-        goldFarm_Enabled = State
-        if State then
-            spawn(goldFarm)
+local function TweenToPosition(position)
+    local character = Players.LocalPlayer.Character
+    if not character then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    local tweenInfo = TweenInfo.new((humanoidRootPart.Position - position).Magnitude / tptweenspeed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(position)})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+local function allResourcesDepleted(resources)
+    for _, resource in ipairs(resources) do
+        local health = resource:FindFirstChild("Health")
+        if health and health.Value > 0 then
+            return false
         end
     end
-})--]]
+    return true
+end
+
+local function goldFarm()
+    while true do
+        task.wait(0.01)
+        while isGoldFarm do
+            for _, pos in ipairs(chunkPos) do
+                if not isGoldFarm then break end
+                TweenToPosition(pos)
+                task.wait(0.1)
+                if not isGoldFarm then break end
+                local iceChunks = getClosestResource("Ice Chunk")
+                local goldNodes = getClosestResource("Gold Node")
+
+
+                local allDepleted = false
+                while not allDepleted do
+                    if not isGoldFarm then break end
+                    allDepleted = true
+                    for _, resource in ipairs(iceChunks) do
+                        local cid = resource:GetAttribute("EntityID")
+                        if not isGoldFarm then break end
+                        local health = resource:FindFirstChild("Health")
+                        if health and health.Value > 0 then
+                            swingTool(cid)
+                            allDepleted = false
+                            break
+                        end
+                    end
+
+                    for _, resource in ipairs(goldNodes) do
+                        if not isGoldFarm then break end
+                        local cid = resource:GetAttribute("EntityID")
+                        local health = resource:FindFirstChild("Health")
+                        if health and health.Value > 0 then
+                            swingTool(cid)
+                            allDepleted = false
+                            break
+                        end
+                    end
+
+                    task.wait(0.1)
+                    if not isGoldFarm then break end
+                end
+            end
+            task.wait(250)
+        end
+    end
+end
+
+spawn(goldFarm)
+
+Farming:AddToggle({
+    Name = "Gold Farm",
+    Default = false,
+    Save = true,
+    Flag = "campfire",
+    Callback = function(State)
+        isGoldFarm = State
+    end
+})
 
 local Section = Farming:AddSection({
     Name = "Settings"
@@ -1656,7 +1603,7 @@ Farming:AddToggle({
     end
 })
 
---[[Farming:AddToggle({
+Farming:AddToggle({
     Name = "Transport Gold To Chest",
     Default = false,
     Save = true,
@@ -1685,7 +1632,7 @@ Farming:AddToggle({
             end
         end)
     end
-})--]]
+})
 
 spawn(autoCampfire)
 
@@ -1763,17 +1710,18 @@ Farming:AddToggle({
         end)
     end
 })
+
 local picka = false
 
 Farming:AddToggle({
-    Name = "Pick Up Gold Bar From Floor",
+    Name = "Pick Up Raw Gold",
     Default = false,
     Callback = function(State)
         picka = State
         if State then
             spawn(function()
                 while picka do
-                    task.wait(0.01)
+                    task.wait(0.1)
                     local item = getClosestItem("Raw Gold")
 
                     if item then
@@ -2154,6 +2102,7 @@ $$ |   $$ |  $$ |  $$ /  \__|$$ |  $$ |$$ /  $$ |$$ |
                                                                                                                 
 --]]
 
+
 local Section = Visual:AddSection({
     Name = "Visual Settings"
 })
@@ -2466,18 +2415,6 @@ $$ |   $$$$$$$$\ $$$$$$$$\ $$$$$$$$\ $$ |       $$$$$$  |$$ |  $$ |  $$ |   \$$$
                                                                                                                                                                     
 --]]
 
-local function TweenToPosition(position)
-    local character = Players.LocalPlayer.Character
-    if not character then return end
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-
-    local tweenInfo = TweenInfo.new((humanoidRootPart.Position - position.Position).Magnitude / tptweenspeed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = position})
-    tween:Play()
-    tween.Completed:Wait()
-end
-
 local function TeleportLoop()
     while tpenabled do
         for _, position in ipairs(tps) do
@@ -2488,7 +2425,7 @@ local function TeleportLoop()
             end
             task.wait(tpinverval)
         end
-task.wait()
+        task.wait()
     end
 end
 
@@ -2694,7 +2631,7 @@ Teleports:AddSlider({
 
 Teleports:AddSlider({
     Name = "Tween Interval",
-    Min = 1,
+    Min = 0,
     Max = 60,
     Default = 10,
     Color = Color3.fromRGB(255, 255, 255),
