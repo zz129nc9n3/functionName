@@ -1520,6 +1520,7 @@ local function goldFarm()
                     if not isGoldFarm then break end
                     allDepleted = true
                     for _, resource in ipairs(iceChunks) do
+                        if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         if not isGoldFarm then break end
                         local health = resource:FindFirstChild("Health")
@@ -1534,6 +1535,7 @@ local function goldFarm()
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         local health = resource:FindFirstChild("Health")
+                        if not isGoldFarm then break end
                         if health and health.Value > 0 then
                             swingTool(cid)
                             allDepleted = false
