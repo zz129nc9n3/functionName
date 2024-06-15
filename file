@@ -1764,19 +1764,22 @@ Farming:AddToggle({
 local picka = false
 
 Farming:AddToggle({
-    Name = "Auto Pickup Raw Gold",
+    Name = "Pick Up Gold Bar From Floor",
     Default = false,
     Callback = function(State)
         picka = State
-        spawn(function()
-            while picka do
-                task.wait()
-                local item = getClosestItem("Raw Gold")
-                if item then
-                    PickUpItem(item)
+        if State then
+            spawn(function()
+                while picka do
+                    task.wait(0.01)
+                    local item = getClosestItem("Raw Gold")
+
+                    if item then
+                       PickUpItem(item)
+                    end
                 end
-            end
-        end)
+            end)
+        end
     end
 })
 
