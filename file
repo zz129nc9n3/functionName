@@ -2486,8 +2486,9 @@ local function TeleportLoop()
             else
                 break
             end
+            task.wait(tpinverval)
         end
-        task.wait(tpinverval)
+task.wait()
     end
 end
 
