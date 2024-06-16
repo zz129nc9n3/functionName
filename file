@@ -1535,7 +1535,7 @@ local function goldFarm()
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         local health = resource:FindFirstChild("Health")
-                        if not isGoldFarm then break end
+                        
                         if health and health.Value > 0 then
                             swingTool(cid)
                             allDepleted = false
@@ -2417,6 +2417,8 @@ $$ |   $$$$$$$$\ $$$$$$$$\ $$$$$$$$\ $$ |       $$$$$$  |$$ |  $$ |  $$ |   \$$$
                                                                                                                                                                     
 --]]
 
+
+
 local function TeleportLoop()
     while tpenabled do
         for _, position in ipairs(tps) do
@@ -2590,7 +2592,7 @@ end
 Teleports:AddButton({
     Name = "Set Position",
     Callback = function()
-        local playerPos = Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+        local playerPos = Players.LocalPlayer.Character.HumanoidRootPart.Position
         table.insert(tps, playerPos)
         createSphereAtPosition(playerPos)
         OrionLib:MakeNotification({
