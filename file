@@ -1451,6 +1451,7 @@ Farming:AddToggle({
     Callback = function(State)
         AutoHarvest_Enabled = State
         while AutoHarvest_Enabled do
+            task.wait()
             local Bushes = GetClosestBushes()
             task.wait()
             for _, Bush in ipairs(Bushes) do
