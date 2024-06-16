@@ -1392,7 +1392,7 @@ local nodePos = {
     Vector3.new(916.58, -0.86, -1415.16),
     Vector3.new(943.14, -2.26, -1429.11),
     Vector3.new(958.85, -3.00, -1391.93),
-    Vector3.new(774.21, -3.00, -1101.09),
+    Vector3.new(780.21, -3.00, -1101.09),
     Vector3.new(588.18, -3.00, -772.59),
     Vector3.new(445.04, -7.42, -497.94),
     Vector3.new(483.49, -2.90, -438.02),
@@ -1621,10 +1621,9 @@ local function test()
 
             if rawGoldValue then
                 for i = 1, rawGoldValue do
-
                     picka = not picka
 
-                    task.wait(0.05) -- Wait 1 second between each drop to ensure it completes
+                    task.wait(0.05) 
                     local index = GetIndex("Raw Gold")
                     if index then
                         Packets.DropBagItem.send(index)
