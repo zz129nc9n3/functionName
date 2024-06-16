@@ -1743,8 +1743,8 @@ local function test()
                     end
                 end
             
-                task.wait(10)
-                picka = not picka
+                task.wait(7.5)
+                picka = true
             end
         end
     end
@@ -1804,7 +1804,7 @@ spawn(goldFarm)
 spawn(test)
 
 Farming:AddToggle({
-    Name = "Gold Farm",
+    Name = "Four Nodes Farm",
     Default = false,
     Save = true,
     Flag = "campfire",
@@ -1814,7 +1814,7 @@ Farming:AddToggle({
 })
 
 Farming:AddToggle({
-    Name = "Gold Farm Test",
+    Name = "All Gold Nodes",
     Default = false,
     Save = true,
     Flag = "campfire",
