@@ -1568,6 +1568,8 @@ local function allResourcesDepleted(resources)
     return true
 end
 
+local picka = false
+
 local function test()
     while true do
         task.wait()
@@ -1613,20 +1615,24 @@ local function test()
                     if not test then break end
                 end
 
-                local rawGoldValue = getValue("Raw Gold")
+            end
 
-                if rawGoldValue then
-                    for i = 1, rawGoldValue do
-                        task.wait(0.05) -- Wait 1 second between each drop to ensure it completes
-                        local index = GetIndex("Raw Gold")
-                        if index then
-                            Packets.DropBagItem.send(index)
-                        end
+            local rawGoldValue = getValue("Raw Gold")
+
+            if rawGoldValue then
+                for i = 1, rawGoldValue do
+
+                    picka = not picka
+
+                    task.wait(0.05) -- Wait 1 second between each drop to ensure it completes
+                    local index = GetIndex("Raw Gold")
+                    if index then
+                        Packets.DropBagItem.send(index)
                     end
-                
-                    task.wait(10)
                 end
-
+            
+                task.wait(10)
+                picka = not picka
             end
         end
     end
@@ -1853,8 +1859,6 @@ Farming:AddToggle({
         end)
     end
 })
-
-local picka = false
 
 Farming:AddToggle({
     Name = "Pick Up Raw Gold",
