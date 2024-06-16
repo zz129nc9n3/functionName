@@ -1616,11 +1616,14 @@ local function test()
                 local rawGoldValue = getValue("Raw Gold")
 
                 if rawGoldValue then
-                    for i = 1, 66 do
-                        task.wait()
-                        Packets.DropBagItem.send(GetIndex("Raw Gold"))
+                    for i = 1, rawGoldValue do
+                        task.wait(0.05) -- Wait 1 second between each drop to ensure it completes
+                        local index = GetIndex("Raw Gold")
+                        if index then
+                            Packets.DropBagItem.send(index)
+                        end
                     end
-
+                
                     task.wait(10)
                 end
 
