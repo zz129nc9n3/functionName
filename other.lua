@@ -193,7 +193,7 @@ local teamESP = false
 
 local tps = {}
 local tpenabled = false
-local tptweenspeed = 18.5
+local tptweenspeed = 17.5
 local showPoints = false
 
 local transportGold = false
@@ -1446,7 +1446,8 @@ local nodePos = {
     Vector3.new(263.14, -3.00, -337.51),
     Vector3.new(367.89, -3.00, -748.23),
     Vector3.new(411.89, -3.17, -806.80),
-    Vector3.new(508.15, -2.73, -924.08)
+    Vector3.new(508.15, -2.73, -924.08),
+    Vector3.new(895.00, -3.00, -1402.68)
 }
 
 
