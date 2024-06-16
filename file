@@ -1387,14 +1387,14 @@ Farming:AddToggle({
 })
 
 local chunkPos = {
-    Vector3.new(938.82, -2.39, -1428.10),
-    Vector3.new(938.82, -2.39, -1428.10),
-    Vector3.new(966.63, -3.00, -1391.91),
-    Vector3.new(966.63, -3.00, -1391.91),
-    Vector3.new(927.96, -2.66, -1370.94),
-    Vector3.new(927.96, -2.66, -1370.94),
-    Vector3.new(895.64, -0.98, -1421.98),
-    Vector3.new(895.64, -0.98, -1421.98)
+    Vector3.new(925.89, -3.00, -1392.63),
+    Vector3.new(925.89, -3.00, -1392.63),
+    Vector3.new(919.27, -0.94, -1416.45),
+    Vector3.new(919.27, -0.94, -1416.45),
+    Vector3.new(942.15, -2.36, -1426.72),
+    Vector3.new(942.15, -2.36, -1426.72),
+    Vector3.new(957.14, -3.00, -1393.31),
+    Vector3.new(957.14, -3.00, -1393.31)
 }
 
 local Section = Farming:AddSection({
