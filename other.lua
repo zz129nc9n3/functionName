@@ -113,7 +113,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local char
 local autoPickupGodSets = false
 
 local function getPlayerCharacter()
@@ -182,7 +181,6 @@ local autohealFruit = nil
 local autoHealCPS = 50
 
 local webhookSending = false
-local webhookUrl1 = ""
 local webhookInterval = 10
 local webhookInSeconds = 600
 local fruitToSend = ""
