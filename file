@@ -1088,23 +1088,22 @@ local function TogglenodeAura()
     while nodeAura and task.wait() do
         local iceChunks = getTargets(10, "Ice Chunk")
         local goldNodes = getTargets(10, "Gold Node")
-        
+        local allTargets = {}
+
+        -- Combine ice chunks and gold nodes into one table
         for _, iceChunk in ipairs(iceChunks) do
-            if iceChunk and iceChunk:FindFirstChild("Health") then
-                if iceChunk.Health.Value > 0 then
-                    while iceChunk and iceChunk:FindFirstChild("Health") and iceChunk.Health.Value > 0 do
-                        swingTool(iceChunk:GetAttribute("EntityID"))
-                        task.wait(0.05)
-                    end
-                end
-            end
+            table.insert(allTargets, iceChunk)
         end
-        
         for _, goldNode in ipairs(goldNodes) do
-            if goldNode and goldNode:FindFirstChild("Health") then
-                if goldNode.Health.Value > 0 then
-                    while goldNode and goldNode:FindFirstChild("Health") and goldNode.Health.Value > 0 do
-                        swingTool(goldNode:GetAttribute("EntityID"))
+            table.insert(allTargets, goldNode)
+        end
+
+        -- Iterate over all targets and hit them
+        for _, target in ipairs(allTargets) do
+            if target and target:FindFirstChild("Health") then
+                if target.Health.Value > 0 then
+                    while target and target:FindFirstChild("Health") and target.Health.Value > 0 do
+                        swingTool(target:GetAttribute("EntityID"))
                         task.wait(0.05)
                     end
                 end
@@ -1112,6 +1111,7 @@ local function TogglenodeAura()
         end
     end
 end
+
 
 local function getClosestCampfire()
     local characterPosition = LocalPlayer.Character:GetPivot().Position
