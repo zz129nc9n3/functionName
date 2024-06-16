@@ -183,7 +183,7 @@ local autoHealCPS = 50
 local webhookSending = false
 local webhookInterval = 10
 local webhookInSeconds = 600
-local fruitToSend = ""
+local fruitToSend = nil
 local lastFruitValue = 0
 local startFruitValue = 0
 
@@ -1615,14 +1615,15 @@ local function test()
 
                 local rawGoldValue = getValue("Raw Gold")
 
-                for i = 1, rawGoldValue do
-                    task.wait()
-                    Packets.DropBagItem(GetIndex("Raw Gold"))
+                if rawGoldValue then
+                    for i = 1, 66 do
+                        task.wait()
+                        Packets.DropBagItem(GetIndex("Raw Gold"))
+                    end
+
+                    task.wait(10)
                 end
 
-                task.wait(10)
-
-                
             end
         end
     end
