@@ -113,7 +113,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local char
+local pickupEverything = false
+local pickupEverythingChest = false
 local autoPickupGodSets = false
 
 local function getPlayerCharacter()
@@ -142,13 +143,10 @@ local wasteLeavesTo = 25
 local autoleaves = false
 
 local FarmingTweenSpeed = 10
-local AutoTeleportDistance = 500
 local autoHarvestRange = 100
 
 local autopickupcoins = false
 local autoPickupItems_Enabled = false
-
-local onlyIce = false
 
 local AutoPlant_Enabled = false
 local AutoTeleport_Enabled = false
@@ -158,11 +156,6 @@ local autoGetChest = false
 
 local SelectedFruits = {}
 local PlayerFruits = {}
-
-local autohit_players = false
-local autohit_resources = false
-local autohit_buildings = false
-local autohit_critters = false
 
 local SelectedFruit = nil
 local wasteFruit = false
@@ -176,7 +169,6 @@ local webhookInSeconds = (webhookInterval * 60)
 local nodeAura = false
 
 local autoheal_enabled = false
-local autohealTo = 100
 local autohealAt = 98
 local autohealFruit = nil
 local autoHealCPS = 50
@@ -196,7 +188,6 @@ local teamESP = false
 local tps = {}
 local tpenabled = false
 local tptweenspeed = 19
-local showPoints = false
 
 local transportGold = false
 
@@ -969,6 +960,32 @@ local function getClosestItem(name)
     return closestItem
 end
 
+local function getclosestdroppeditem()
+    local closestItem
+    local minDistance = 1
+    local maxDistance = 35
+    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local Items = game.Workspace:FindFirstChild("Items")
+
+    if not RootPart or not Items then
+        return nil
+    end
+
+    local PlayerPosition = RootPart.Position
+    for _, item in pairs(Items:GetChildren()) do
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
+            local ItemPosition = item:GetPivot().Position
+            local Distance = (PlayerPosition - ItemPosition).Magnitude
+            if Distance < maxDistance then
+                minDistance = Distance
+                closestItem = item
+            end
+        end
+    end
+
+    return closestItem
+end
+
 local function autoPickupItems(itemType)
     local function getClosestItem(itemName)
         local closestItem = nil
@@ -1359,10 +1376,10 @@ Farming:AddToggle({
                 AutoFarm_Timer_Enabled = true
                 spawn(function()
                     while AutoFarm_Timer_Enabled do
-                        task.wait(60) -- Wait for one minute
+                        task.wait(60)
                         if AutoTeleport_Enabled then
                             AutoTeleport_Enabled = false
-                            task.wait(0.25) -- Small delay to retoggle
+                            task.wait(0.5)
                             AutoTeleport_Enabled = true
                             print("retoggled")
                         else
@@ -2913,6 +2930,26 @@ Player:AddToggle({
                 while autoPickupCrystal do
                     task.wait(0.01)
                     autoPickupItems(2)
+                end
+            end)
+        end
+    end
+})
+
+Player:AddToggle({
+    Name = "Auto Pick Up Everything",
+    Default = false,
+    Callback = function(State)
+        pickupEverything = State
+        if State then
+            spawn(function()
+                while pickupEverything do
+                    task.wait(0.01)
+                    local item = getclosestdroppeditem()
+
+                    if item then
+                        PickUpItem(item)
+                    end
                 end
             end)
         end
