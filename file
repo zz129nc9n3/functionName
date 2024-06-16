@@ -1327,7 +1327,7 @@ Farming:AddToggle({
     
                 local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
                 local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4, 0)})
+                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
     
                 Tween:Play()
                 Tween.Completed:Wait()
@@ -1341,12 +1341,12 @@ Farming:AddToggle({
     
                 local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
                 local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4, 0)})
+                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
     
                 Tween:Play()
                 Tween.Completed:Wait()
     
-                task.wait(0.1)
+                task.wait()
             end
         end
     end
