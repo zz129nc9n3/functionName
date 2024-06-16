@@ -1687,6 +1687,7 @@ local function test()
     while true do
         task.wait()
         while test do
+            picka = true
             for _, pos in ipairs(nodePos) do
                 if not test then break end
                 TweenToPosition(pos)
@@ -1734,9 +1735,9 @@ local function test()
 
             if rawGoldValue then
                 for i = 1, rawGoldValue do
-                    picka = not picka
+                    picka = false
 
-                    task.wait(0.05) 
+                    task.wait(0.02) 
                     local index = GetIndex("Raw Gold")
                     if index then
                         Packets.DropBagItem.send(index)
@@ -1744,8 +1745,8 @@ local function test()
                 end
             
                 task.wait(7.5)
-                picka = true
             end
+            picka = true
         end
     end
 end
