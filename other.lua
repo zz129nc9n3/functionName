@@ -1618,7 +1618,7 @@ local function test()
                 if rawGoldValue then
                     for i = 1, 66 do
                         task.wait()
-                        Packets.DropBagItem(GetIndex("Raw Gold"))
+                        Packets.DropBagItem.send(GetIndex("Raw Gold"))
                     end
 
                     task.wait(10)
