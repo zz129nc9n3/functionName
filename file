@@ -1498,7 +1498,7 @@ local function goldFarm()
                     if not isGoldFarm then break end
                 end
             end
-            task.wait(210)
+            task.wait(200)
         end
     end
 end
