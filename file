@@ -2544,7 +2544,7 @@ local function createSphereAtPosition(position)
     sphere.Size = Vector3.new(1.5, 1.5, 1.5)
     sphere.Anchored = true
     sphere.CanCollide = false
-    sphere.Position = position.Position + Vector3.new(0, -0.5, 0)
+    sphere.Position = position + Vector3.new(0, -0.5, 0)
     sphere.Parent = game.Workspace
     table.insert(sphereParts, sphere)
 end
