@@ -113,6 +113,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local pickupEverything = false
+local pickupEverythingChest = false
 local autoPickupGodSets = false
 
 local function getPlayerCharacter()
@@ -141,13 +143,10 @@ local wasteLeavesTo = 25
 local autoleaves = false
 
 local FarmingTweenSpeed = 10
-local AutoTeleportDistance = 500
 local autoHarvestRange = 100
 
 local autopickupcoins = false
 local autoPickupItems_Enabled = false
-
-local onlyIce = false
 
 local AutoPlant_Enabled = false
 local AutoTeleport_Enabled = false
@@ -157,11 +156,6 @@ local autoGetChest = false
 
 local SelectedFruits = {}
 local PlayerFruits = {}
-
-local autohit_players = false
-local autohit_resources = false
-local autohit_buildings = false
-local autohit_critters = false
 
 local SelectedFruit = nil
 local wasteFruit = false
@@ -175,15 +169,15 @@ local webhookInSeconds = (webhookInterval * 60)
 local nodeAura = false
 
 local autoheal_enabled = false
-local autohealTo = 100
 local autohealAt = 98
 local autohealFruit = nil
 local autoHealCPS = 50
 
 local webhookSending = false
+local webhookUrl1 = ""
 local webhookInterval = 10
 local webhookInSeconds = 600
-local fruitToSend = nil
+local fruitToSend = ""
 local lastFruitValue = 0
 local startFruitValue = 0
 
@@ -193,8 +187,7 @@ local teamESP = false
 
 local tps = {}
 local tpenabled = false
-local tptweenspeed = 17.5
-local showPoints = false
+local tptweenspeed = 19
 
 local transportGold = false
 
@@ -473,35 +466,6 @@ local function getClosestChest()
     return nearestChest
 end
 
-local function getClosestItem(name)
-    local closestItem
-    local minDistance = 1
-    local maxDistance = 35
-    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local Items = game.Workspace:FindFirstChild("Items")
-
-    if not RootPart or not Items then
-        return nil
-    end
-
-    local PlayerPosition = RootPart.Position
-    for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
-
-            if item.Name == name then
-            local ItemPosition = item:GetPivot().Position
-            local Distance = (PlayerPosition - ItemPosition).Magnitude
-            if Distance < maxDistance then
-                minDistance = Distance
-                closestItem = item
-            end
-        end
-        end
-    end
-
-    return closestItem
-end
-
 
 local allowedBushNames = {
     "Berry Bush",
@@ -670,31 +634,6 @@ local function GetRandomBush()
     return Bushes[randomIndex]
 end
 
-local function canMoveToPosition(startPos, endPos)
-    local rayDirection = (endPos - startPos).Unit * (endPos - startPos).Magnitude
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-    local raycastResult = workspace:Raycast(startPos, rayDirection, raycastParams)
-    return raycastResult == nil, raycastResult
-end
-
-local function facePlayerTo(position)
-    local character = LocalPlayer.Character
-    if not character then return end
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-
-    local lookAt = CFrame.lookAt(humanoidRootPart.Position, position)
-    humanoidRootPart.CFrame = lookAt
-end
-
-local function adjustCameraToPosition(position)
-    local Camera = workspace.CurrentCamera
-    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, position)
-end
-
 local function swingTool(entityID)
     if entityID then
         Packets.SwingTool.send({entityID})
@@ -709,28 +648,6 @@ local function getTargets(radius, targetName)
     for _, Part in ipairs(Parts) do
         if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == targetName then
             table.insert(targets, Part.Parent)
-        end
-    end
-
-    return targets
-end
-
-local function ggetTargets(radius)
-    local characterPosition = LocalPlayer.Character:GetPivot().Position
-
-    local Parts = {}
-    local success, err = pcall(function()
-        Parts = workspace:GetPartBoundsInRadius(characterPosition, radius)
-    end)
-
-    local targets = {}
-
-    for _, Part in ipairs(Parts) do
-        if Part.Parent and Part.Parent:IsA("Model") and (Part.Name == "Gold Node" or Part.Name == "Ice Chunk") then
-            local health = Part:FindFirstChild("Health")
-            if health and health.Value > 0 then
-                table.insert(targets, Part.Parent)
-            end
         end
     end
 
@@ -817,19 +734,6 @@ local function GetRandomTeleportBox()
 end
 
 local findPlantBoxNext = true
-
-local function FindTeleportTarget()
-    if findPlantBoxNext then
-        local plantBox = GetRandomTeleportBox()
-        findPlantBoxNext = false
-        return plantBox
-    else
-        local randomBush = GetRandomBush()
-        findPlantBoxNext = true 
-        return randomBush
-    end
-end
-
 
 local function addHighlights()
     local totems = game.Workspace.Totems:GetChildren()
@@ -936,6 +840,180 @@ local function getClosestDroppedItem()
     end
 
     return closestItem
+end
+
+local function getClosestDroppedGold()
+    local closestItem
+    local minDistance = 15
+    local maxDistance = 35
+    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local Items = game.Workspace:FindFirstChild("Items")
+
+    if not RootPart or not Items then
+        return nil
+    end
+
+    local PlayerPosition = RootPart.Position
+    for _, item in pairs(Items:GetChildren()) do
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
+
+            if item.Name == "Raw Gold" then
+            local ItemPosition = item:GetPivot().Position
+            local Distance = (PlayerPosition - ItemPosition).Magnitude
+            if Distance < maxDistance then
+                minDistance = Distance
+                closestItem = item
+            end
+        end
+        end
+    end
+
+    return closestItem
+end
+
+local function getClosestItem(name)
+    local closestItem
+    local minDistance = 1
+    local maxDistance = 35
+    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local Items = game.Workspace:FindFirstChild("Items")
+
+    if not RootPart or not Items then
+        return nil
+    end
+
+    local PlayerPosition = RootPart.Position
+    for _, item in pairs(Items:GetChildren()) do
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
+
+            if item.Name == name then
+            local ItemPosition = item:GetPivot().Position
+            local Distance = (PlayerPosition - ItemPosition).Magnitude
+            if Distance < maxDistance then
+                minDistance = Distance
+                closestItem = item
+            end
+        end
+        end
+    end
+
+    return closestItem
+end
+
+local function getclosestdroppeditem()
+    local closestItem
+    local minDistance = 1
+    local maxDistance = 35
+    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local Items = game.Workspace:FindFirstChild("Items")
+
+    if not RootPart or not Items then
+        return nil
+    end
+
+    local PlayerPosition = RootPart.Position
+    for _, item in pairs(Items:GetChildren()) do
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
+            local ItemPosition = item:GetPivot().Position
+            local Distance = (PlayerPosition - ItemPosition).Magnitude
+            if Distance < maxDistance then
+                minDistance = Distance
+                closestItem = item
+            end
+        end
+    end
+
+    return closestItem
+end
+
+local function autoPickupItems(itemType)
+    local function getClosestItem(itemName)
+        local closestItem = nil
+        local minDistance = 15
+        local maxDistance = 35
+        local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local Items = game.Workspace:FindFirstChild("Items")
+
+        if not RootPart or not Items then
+            return nil
+        end
+
+        local PlayerPosition = RootPart.Position
+        for _, item in pairs(Items:GetChildren()) do
+            if item.Name == itemName and (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
+                local ItemPosition = item:GetPivot().Position
+                local Distance = (PlayerPosition - ItemPosition).Magnitude
+                if Distance < maxDistance and Distance < minDistance then
+                    minDistance = Distance
+                    closestItem = item
+                end
+            end
+        end
+
+        return closestItem
+    end
+
+    while true do
+        if itemType == 1 then
+            local item = getClosestItem("Gold")
+            if item then
+                PickUpItem(item)
+            end
+        elseif itemType == 2 then
+            local item = getClosestItem("Crystal Chunk")
+            if item then
+                PickUpItem(item)
+            end
+        elseif itemType == 3 then
+            local item1 = getClosestItem("Gold")
+            if item1 then
+                PickUpItem(item1)
+            end
+            local item2 = getClosestItem("Crystal Chunk")
+            if item2 then
+                PickUpItem(item2)
+            end
+        end
+        task.wait(0.01)
+    end
+end
+
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+local function getHumanoidRootPart()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return character:WaitForChild("HumanoidRootPart")
+end
+
+local function GetClosestPress()
+    local characterPosition = LocalPlayer.Character:GetPivot().Position
+    local Parts = workspace:GetPartBoundsInRadius(characterPosition, 35)
+    local nearestPress = nil
+    local shortestDistance = math.huge
+
+    for _, Part in ipairs(Parts) do
+        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == "Coin Press" then
+            local distance = (Part.Position - characterPosition).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                nearestPress = Part.Parent
+            end
+        end
+    end
+
+    return nearestPress
+end
+
+local function dropGold(index)
+    if index then
+        Packets.DropBagItem.send(index)
+    end
 end
 
 local function TogglenodeAura()
@@ -1173,6 +1251,20 @@ local function getClosestDeployable(name)
     return nearestCampfire
 end
 
+local findPlantBoxNext = true
+
+local function FindTeleportTarget()
+    if findPlantBoxNext then
+        local plantBox = GetRandomTeleportBox()
+        findPlantBoxNext = false
+        return plantBox
+    else
+        local randomBush = GetRandomBush()
+        findPlantBoxNext = true 
+        return randomBush
+    end
+end
+
 --[[
 
 
@@ -1201,7 +1293,7 @@ Farming:AddTextbox({
     end
 })
 
-local canPlant = false
+local AutoFarm_Timer_Enabled = false
 
 Farming:AddToggle({
     Name = "Auto Farm",
@@ -1210,215 +1302,41 @@ Farming:AddToggle({
         AutoTeleport_Enabled = State
 
         while AutoTeleport_Enabled do
-            local target = nil
 
             if onlyBushes then
-                target = GetNearestBush()
-            else
-                target = getTPBox()
+                local target = GetNearestBush()
+                task.wait()
 
                 if target == nil then
-                    target = GetNearestBush()
+                    task.wait(0.1) 
+                    continue
                 end
-            end
-
-            if target then
-                local playerPivot = LocalPlayer.Character:GetPivot()
-                local targetPivot = target:GetPivot()
-                local distance = (playerPivot.Position - targetPivot.Position).Magnitude
-                local speed = distance / FarmingTweenSpeed
-
-                local TI = TweenInfo.new(speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = targetPivot * CFrame.new(0, 4.2, 0)})
-
+    
+                local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
+                local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
+    
                 Tween:Play()
                 Tween.Completed:Wait()
             else
-                task.wait(1)
+                local target = getTPBox()
+
+                if target == nil then
+                    task.wait(0.1) 
+                    continue
+                end
+    
+                local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
+                local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
+    
+                Tween:Play()
+                Tween.Completed:Wait()
+    
             end
         end
     end
 })
-
-local test = false
-
-local nodePos = {
-    Vector3.new(865.38, -3.00, -1392.89),
-    Vector3.new(871.50, -3.00, -1393.38),
-    Vector3.new(878.75, -3.00, -1393.96),
-    Vector3.new(886.40, -3.00, -1394.58),
-    Vector3.new(894.66, -3.00, -1395.25),
-    Vector3.new(901.57, -3.00, -1390.47),
-    Vector3.new(910.12, -3.00, -1387.77),
-    Vector3.new(914.74, -3.00, -1387.42),
-    Vector3.new(903.43, -3.00, -1401.18),
-    Vector3.new(910.95, -1.65, -1413.16),
-    Vector3.new(902.77, -1.48, -1415.10),
-    Vector3.new(902.70, -0.76, -1423.10),
-    Vector3.new(917.55, -1.26, -1425.77),
-    Vector3.new(920.93, -0.87, -1421.14),
-    Vector3.new(941.65, -2.52, -1430.84),
-    Vector3.new(943.69, -2.43, -1426.73),
-    Vector3.new(950.84, -2.63, -1408.40),
-    Vector3.new(959.13, -3.00, -1392.42),
-    Vector3.new(945.03, -3.00, -1389.15),
-    Vector3.new(943.27, -4.03, -1318.25),
-    Vector3.new(943.52, -7.00, -1307.61),
-    Vector3.new(943.84, -7.00, -1294.39),
-    Vector3.new(944.11, -7.00, -1283.37),
-    Vector3.new(944.41, -7.00, -1270.82),
-    Vector3.new(944.69, -7.00, -1259.22),
-    Vector3.new(944.98, -7.63, -1247.56),
-    Vector3.new(945.31, -7.00, -1233.99),
-    Vector3.new(941.22, -7.16, -1214.90),
-    Vector3.new(935.26, -7.00, -1203.97),
-    Vector3.new(928.79, -7.00, -1192.11),
-    Vector3.new(922.89, -7.19, -1181.29),
-    Vector3.new(916.45, -7.03, -1169.49),
-    Vector3.new(910.26, -7.00, -1158.15),
-    Vector3.new(904.69, -7.23, -1147.94),
-    Vector3.new(899.61, -7.04, -1138.61),
-    Vector3.new(893.97, -7.66, -1128.28),
-    Vector3.new(888.07, -7.65, -1117.46),
-    Vector3.new(882.61, -7.38, -1107.44),
-    Vector3.new(877.14, -7.97, -1097.41),
-    Vector3.new(871.67, -7.07, -1087.38),
-    Vector3.new(866.34, -7.04, -1077.62),
-    Vector3.new(860.90, -7.22, -1067.64),
-    Vector3.new(855.40, -7.01, -1057.55),
-    Vector3.new(846.90, -7.65, -1044.81),
-    Vector3.new(838.61, -7.42, -1034.43),
-    Vector3.new(830.25, -7.13, -1023.97),
-    Vector3.new(822.79, -7.16, -1014.61),
-    Vector3.new(813.84, -7.16, -1003.41),
-    Vector3.new(805.69, -7.67, -993.20),
-    Vector3.new(798.31, -7.32, -983.96),
-    Vector3.new(790.46, -7.98, -974.12),
-    Vector3.new(782.37, -7.50, -964.00),
-    Vector3.new(774.07, -7.25, -953.61),
-    Vector3.new(764.74, -7.35, -941.92),
-    Vector3.new(748.86, -7.70, -922.03),
-    Vector3.new(713.73, -7.28, -898.22),
-    Vector3.new(684.25, -7.00, -876.74),
-    Vector3.new(643.15, -7.32, -846.04),
-    Vector3.new(609.88, -7.04, -818.38),
-    Vector3.new(591.65, -3.02, -799.89),
-    Vector3.new(576.17, -3.00, -764.68),
-    Vector3.new(559.67, -3.00, -725.04),
-    Vector3.new(543.75, -3.00, -694.63),
-    Vector3.new(531.95, -7.60, -672.06),
-    Vector3.new(523.49, -7.13, -655.90),
-    Vector3.new(503.98, -7.21, -627.80),
-    Vector3.new(476.55, -7.53, -596.65),
-    Vector3.new(456.79, -7.00, -562.67),
-    Vector3.new(444.84, -7.10, -528.04),
-    Vector3.new(459.40, -7.66, -466.72),
-    Vector3.new(483.30, -3.89, -442.49),
-    Vector3.new(484.50, -2.75, -422.25),
-    Vector3.new(505.89, -1.68, -413.70),
-    Vector3.new(521.88, -3.07, -391.56),
-    Vector3.new(545.47, -3.90, -358.63),
-    Vector3.new(566.78, 4.50, -350.28),
-    Vector3.new(574.41, 7.90, -343.97),
-    Vector3.new(576.55, 14.38, -352.04),
-    Vector3.new(585.55, 14.38, -344.86),
-    Vector3.new(586.27, 13.01, -350.93),
-    Vector3.new(593.78, -4.55, -351.57),
-    Vector3.new(606.08, -7.04, -352.27),
-    Vector3.new(620.11, -7.28, -358.30),
-    Vector3.new(637.47, -6.34, -375.05),
-    Vector3.new(614.10, -6.34, -384.19),
-    Vector3.new(598.28, -8.65, -369.04),
-    Vector3.new(587.60, -5.13, -371.02),
-    Vector3.new(581.15, 1.23, -379.92),
-    Vector3.new(577.73, 7.57, -396.42),
-    Vector3.new(564.07, 8.59, -389.28),
-    Vector3.new(558.77, 13.94, -401.41),
-    Vector3.new(547.80, 9.78, -383.80),
-    Vector3.new(553.72, 7.08, -370.42),
-    Vector3.new(564.39, 5.15, -359.01),
-    Vector3.new(574.48, 7.88, -342.65),
-    Vector3.new(580.84, 13.02, -332.25),
-    Vector3.new(576.49, 22.82, -317.61),
-    Vector3.new(579.60, 31.99, -309.49),
-    Vector3.new(586.27, 38.51, -302.15),
-    Vector3.new(599.96, 40.30, -295.78),
-    Vector3.new(614.26, 37.13, -287.05),
-    Vector3.new(629.81, 35.43, -282.14),
-    Vector3.new(637.11, 44.43, -276.66),
-    Vector3.new(628.67, 41.37, -264.69),
-    Vector3.new(627.89, 52.09, -254.49),
-    Vector3.new(628.92, 57.65, -246.38),
-    Vector3.new(626.07, 55.85, -238.97),
-    Vector3.new(622.45, 47.36, -227.16),
-    Vector3.new(624.95, 51.92, -214.59),
-    Vector3.new(626.13, 47.45, -202.14),
-    Vector3.new(623.48, 34.49, -189.47),
-    Vector3.new(627.21, 32.38, -180.94),
-    Vector3.new(657.99, 31.73, -180.94),
-    Vector3.new(659.40, 31.56, -172.76),
-    Vector3.new(647.52, -2.30, -142.90),
-    Vector3.new(621.81, -4.47, -113.54),
-    Vector3.new(612.48, -7.08, -43.38),
-    Vector3.new(609.12, -7.42, -24.73),
-    Vector3.new(602.28, -7.18, 13.32),
-    Vector3.new(579.78, -7.59, 64.73),
-    Vector3.new(558.10, -7.51, 106.69),
-    Vector3.new(549.41, -3.38, 125.03),
-    Vector3.new(540.82, -3.08, 151.06),
-    Vector3.new(524.90, 4.03, 168.01),
-    Vector3.new(523.47, 12.57, 178.41),
-    Vector3.new(516.82, 12.55, 191.13),
-    Vector3.new(466.64, 15.73, 152.99),
-    Vector3.new(493.75, 13.03, 198.72),
-    Vector3.new(468.48, 12.25, 231.91),
-    Vector3.new(456.06, 9.42, 224.64),
-    Vector3.new(446.93, -3.27, 221.99),
-    Vector3.new(438.05, -3.00, 211.54),
-    Vector3.new(394.62, -3.00, 176.55),
-    Vector3.new(282.29, -7.17, 94.10),
-    Vector3.new(262.22, -3.93, 80.71),
-    Vector3.new(243.57, -3.00, 68.26),
-    Vector3.new(225.47, -3.00, 56.19),
-    Vector3.new(200.93, -3.00, 33.48),
-    Vector3.new(187.28, -3.00, 18.08),
-    Vector3.new(178.73, -3.00, -2.68),
-    Vector3.new(186.68, -3.00, -15.84),
-    Vector3.new(198.18, -3.08, -30.81),
-    Vector3.new(208.44, -3.00, -49.99),
-    Vector3.new(232.44, -3.05, -98.64),
-    Vector3.new(255.55, -3.00, -147.92),
-    Vector3.new(267.91, -3.00, -190.48),
-    Vector3.new(275.17, -3.00, -222.62),
-    Vector3.new(282.23, -3.00, -250.49),
-    Vector3.new(300.62, -3.26, -273.72),
-    Vector3.new(335.10, -7.50, -315.23),
-    Vector3.new(433.07, -7.60, -437.14),
-    Vector3.new(449.28, -7.07, -541.98),
-    Vector3.new(514.13, -7.22, -617.67),
-    Vector3.new(548.76, -7.54, -658.61),
-    Vector3.new(563.99, -3.00, -676.62),
-    Vector3.new(590.37, -3.00, -715.96),
-    Vector3.new(588.31, -3.00, -764.33),
-    Vector3.new(603.83, -3.71, -801.51),
-    Vector3.new(682.21, -7.89, -952.52),
-    Vector3.new(720.55, -7.02, -1012.32),
-    Vector3.new(732.75, -3.03, -1040.18),
-    Vector3.new(745.42, -3.00, -1057.11),
-    Vector3.new(766.29, -3.00, -1081.08),
-    Vector3.new(785.49, -2.32, -1096.73),
-    Vector3.new(793.19, -3.57, -1109.20),
-    Vector3.new(889.33, -7.00, -1230.99),
-    Vector3.new(929.79, -7.00, -1291.79),
-    Vector3.new(946.89, -3.00, -1331.97),
-    Vector3.new(909.76, -3.00, -1355.97),
-    Vector3.new(880.62, -3.00, -1372.76),
-    Vector3.new(871.92, -3.00, -1396.41),
-    Vector3.new(891.57, -3.00, -1400.05)
-}
-
-
-
 
 local chunkPos = {
     Vector3.new(925.89, -3.00, -1392.63),
@@ -1487,7 +1405,6 @@ Farming:AddToggle({
         while AutoHarvest_Enabled do
             task.wait()
             local Bushes = GetClosestBushes()
-            task.wait()
             for _, Bush in ipairs(Bushes) do
                 if Bush then
                     PickUpItem(Bush)
@@ -1527,74 +1444,14 @@ local function TweenToPosition(position)
     tween.Completed:Wait()
 end
 
-local picka = false
-
-local function test()
-    while true do
-        task.wait()
-        while test do
-            picka = true
-            for _, pos in ipairs(nodePos) do
-                if not test then break end
-                TweenToPosition(pos)
-                task.wait()
-                if not test then break end
-                local iceChunks = getClosestResource("Ice Chunk")
-                local goldNodes = getClosestResource("Gold Node")
-
-
-                local allDepleted = false
-                while not allDepleted do
-                    if not test then break end
-                    allDepleted = true
-                    for _, resource in ipairs(iceChunks) do
-                        if not test then break end
-                        local cid = resource:GetAttribute("EntityID")
-                        if not test then break end
-                        local health = resource:FindFirstChild("Health")
-                        if health and health.Value > 0 then
-                            swingTool(cid)
-                            allDepleted = false
-                            break
-                        end
-                    end
-
-                    for _, resource in ipairs(goldNodes) do
-                        if not test then break end
-                        local cid = resource:GetAttribute("EntityID")
-                        local health = resource:FindFirstChild("Health")
-                        
-                        if health and health.Value > 0 then
-                            swingTool(cid)
-                            allDepleted = false
-                            break
-                        end
-                    end
-
-                    task.wait()
-                    if not test then break end
-                end
-
-            end
-
-            local rawGoldValue = getValue("Raw Gold")
-
-            if rawGoldValue then
-                picka = false
-                for i = 1, rawGoldValue do
-                    task.wait(0.02) 
-                    local index = GetIndex("Raw Gold")
-                    if index then
-                        Packets.DropBagItem.send(index)
-                    end
-                end
-            
-                task.wait(12)
-            end
-
-            picka = true
+local function allResourcesDepleted(resources)
+    for _, resource in ipairs(resources) do
+        local health = resource:FindFirstChild("Health")
+        if health and health.Value > 0 then
+            return false
         end
     end
+    return true
 end
 
 local function goldFarm()
@@ -1609,15 +1466,14 @@ local function goldFarm()
                 local iceChunks = getClosestResource("Ice Chunk")
                 local goldNodes = getClosestResource("Gold Node")
 
-
                 local allDepleted = false
                 while not allDepleted do
                     if not isGoldFarm then break end
                     allDepleted = true
+
                     for _, resource in ipairs(iceChunks) do
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
-                        if not isGoldFarm then break end
                         local health = resource:FindFirstChild("Health")
                         if health and health.Value > 0 then
                             swingTool(cid)
@@ -1630,7 +1486,6 @@ local function goldFarm()
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         local health = resource:FindFirstChild("Health")
-                        
                         if health and health.Value > 0 then
                             swingTool(cid)
                             allDepleted = false
@@ -1642,31 +1497,20 @@ local function goldFarm()
                     if not isGoldFarm then break end
                 end
             end
-            task.wait(210)
+            task.wait(200)
         end
     end
 end
 
 spawn(goldFarm)
-spawn(test)
 
 Farming:AddToggle({
-    Name = "Four Nodes Farm",
+    Name = "Gold Farm",
     Default = false,
     Save = true,
     Flag = "campfire",
     Callback = function(State)
         isGoldFarm = State
-    end
-})
-
-Farming:AddToggle({
-    Name = "All Gold Nodes",
-    Default = false,
-    Save = true,
-    Flag = "campfire",
-    Callback = function(State)
-        test = State
     end
 })
 
@@ -1781,8 +1625,8 @@ Farming:AddToggle({
         
         spawn(function()
             while autopickupcoins do
-                task.wait()
                 local item = GetClosestCoin()
+                task.wait()
                 if item then
                     PickUpItem(item)
                 end
@@ -1812,6 +1656,7 @@ Farming:AddToggle({
         autoGetChest = State
         spawn(function()
             while autoGetChest do
+                
                 task.wait()
                 getClosestChest()
             end
@@ -1819,27 +1664,25 @@ Farming:AddToggle({
     end
 })
 
-local function goldLoop()
-    while true do
-        task.wait()
-        while picka do
-            task.wait(0.1)
-            local item = getClosestItem("Raw Gold")
-
-            if item then
-               PickUpItem(item)
-            end
-        end
-    end
-end
-
-spawn(goldLoop)
+local picka = false
 
 Farming:AddToggle({
     Name = "Pick Up Raw Gold",
     Default = false,
     Callback = function(State)
         picka = State
+        if State then
+            spawn(function()
+                while picka do
+                    local item = getClosestItem("Raw Gold")
+                    task.wait()
+
+                    if item then
+                       PickUpItem(item)
+                    end
+                end
+            end)
+        end
     end
 })
 
@@ -1997,3 +1840,1341 @@ Farming:AddSlider({
         wasteFruitTo = Value
     end
 })
+
+local autohit_critters = false
+local pickupMeat = false
+local pickupEssence = false
+local pickupmag = false
+local rapeMag = false
+
+Farming:AddToggle({
+    Name = "Hit Servants",
+    Default = false,
+    Save = true,
+    Flag = "servants",
+    Callback = function(State)
+        autohit_critters = State
+        if State then
+            spawn(function()
+                while autohit_critters do
+                    task.wait(0.1)
+                    local character = LocalPlayer.Character
+                    if character then
+                        local characterPosition = character:GetPivot().Position
+                        local parts = workspace:GetPartBoundsInRadius(characterPosition, 20)
+    
+                        local entityIDs = {}
+                        for _, part in ipairs(parts) do
+                            if part.Parent and part.Parent.Name == "Queen Ant's Servant" then
+                                local cid = part.Parent:GetAttribute("EntityID")
+                                local health = part.Parent:FindFirstChild("Health")
+    
+                                if cid and health and health.Value > 0 then
+                                    table.insert(entityIDs, cid)
+                                end
+                            end
+                        end
+    
+                        if #entityIDs > 0 then
+                            Packets.SwingTool.send(entityIDs)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Farming:AddToggle({
+    Name = "Hit Queen Ant (To 100hp)",
+    Default = false,
+    Save = true,
+    Flag = "servants",
+    Callback = function(State)
+        autohit_critters = State
+        if State then
+            spawn(function()
+                while autohit_critters do
+                    task.wait(0.1)
+                    local character = LocalPlayer.Character
+                    if character then
+                        local characterPosition = character:GetPivot().Position
+                        local parts = workspace:GetPartBoundsInRadius(characterPosition, 20)
+    
+                        local entityIDs = {}
+                        for _, part in ipairs(parts) do
+                            if part.Parent and part.Parent.Name == "Queen Ant" then
+                                local cid = part.Parent:GetAttribute("EntityID")
+                                local health = part.Parent:FindFirstChild("Health")
+    
+                                if cid and health and health.Value > 99 then
+                                    table.insert(entityIDs, cid)
+                                end
+                            end
+                        end
+    
+                        if #entityIDs > 0 then
+                            Packets.SwingTool.send(entityIDs)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Farming:AddToggle({
+    Name = "Pick Up Essence",
+    Default = false,
+    Save = true,
+    Flag = "essence",
+    Callback = function(State)
+        pickupEssence = State
+        if State then
+            spawn(function()
+                while true do
+                    task.wait()
+                while pickupEssence do
+                    task.wait()
+                    local item = getClosestItem("Essence")
+
+                    if item then
+                    PickUpItem(item)
+                    end
+                end
+            end
+            end)
+        end
+    end
+})
+
+Farming:AddToggle({
+    Name = "Pick Up Cooked Meat",
+    Default = false,
+    Save = true,
+    Flag = "pickupMeat",
+    Callback = function(State)
+        pickupMeat = State
+        if State then
+            spawn(function()
+                while true do
+                    task.wait()
+                while pickupMeat do
+                    task.wait()
+                    local item = getClosestItem("Cooked Meat")
+
+                    if item then
+                    PickUpItem(item)
+                    end
+                end
+            end
+            end)
+        end
+    end
+})
+
+Farming:AddToggle({
+    Name = "Eat Cooked Meat",
+    Default = false,
+    Save = true,
+    Flag = "eatMeat",
+    Callback = function(State)
+        wasteMeat = State
+    end
+})
+
+Farming:AddToggle({
+    Name = "Waste Mag",
+    Default = false,
+    Save = true,
+    Flag = "wasteMag",
+    Callback = function(State)
+        wasetMag = State
+    end
+})
+
+Farming:AddToggle({
+    Name = "Pick Up Magnetite",
+    Default = false,
+    Save = true,
+    Flag = "pickupMag",
+    Callback = function(State)
+        pickupmag = State
+        if State then
+            spawn(function()
+                while true do
+                    task.wait()
+                while pickupmag do
+                    task.wait()
+                    local item = getClosestItem("Magnetite")
+
+                    if item then
+                    PickUpItem(item)
+                    end
+                end
+            end
+            end)
+        end
+    end
+})
+
+local pickupgold
+
+Farming:AddToggle({
+    Name = "Pick Up Gold Bar From Floor",
+    Default = false,
+    Callback = function(State)
+        pickupgold = State
+        if State then
+            spawn(function()
+                while pickupgold do
+                    task.wait()
+                    local item = getClosestItem("Gold")
+
+                    if item then
+                    PickUpItem(item)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+--[[
+
+
+$$\    $$\ $$$$$$\  $$$$$$\  $$\   $$\  $$$$$$\  $$\       
+$$ |   $$ |\_$$  _|$$  __$$\ $$ |  $$ |$$  __$$\ $$ |      
+$$ |   $$ |  $$ |  $$ /  \__|$$ |  $$ |$$ /  $$ |$$ |      
+\$$\  $$  |  $$ |  \$$$$$$\  $$ |  $$ |$$$$$$$$ |$$ |      
+\$$\$$  /   $$ |   \____$$\ $$ |  $$ |$$  __$$ |$$ |      
+\$$$  /    $$ |  $$\   $$ |$$ |  $$ |$$ |  $$ |$$ |      
+\$  /   $$$$$$\ \$$$$$$  |\$$$$$$  |$$ |  $$ |$$$$$$$$\ 
+    \_/    \______| \______/  \______/ \__|  \__|\________|
+                                                        
+                                                                                                                
+--]]
+
+
+local Section = Visual:AddSection({
+    Name = "Visual Settings"
+})
+
+Visual:AddColorpicker({
+    Name = "ESP Fill Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espChamColor = Value
+    end
+})
+
+Visual:AddColorpicker({
+    Name = "ESP Outline Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        espOutlineColor = Value
+    end
+})
+
+Visual:AddToggle({
+    Name = "Player ESP",
+    Default = false,
+    Callback = function(Value)
+        esp = Value
+
+        local function addHighlightPlayer(character)
+            if not character:FindFirstChildOfClass("Highlight") then
+                local highlight = Instance.new("Highlight", character)
+                highlight.FillColor = espChamColor
+                highlight.FillTransparency = 0.1
+                highlight.OutlineColor = espOutlineColor
+                highlight.OutlineTransparency = 0
+            end
+        end
+
+        local function removeHighlightPlayer(character)
+            local highlight = character:FindFirstChildOfClass("Highlight")
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                if esp then
+                    addHighlightPlayer(character)
+                else
+                    removeHighlightPlayer(character)
+                end
+            end
+        end
+
+        Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(character)
+                if esp then
+                    addHighlightPlayer(character)
+                end
+            end)
+            if player.Character and esp then
+                addHighlightPlayer(player.Character)
+            end
+        end)
+
+        Players.PlayerRemoving:Connect(function(player)
+            if player.Character then
+                removeHighlightPlayer(player.Character)
+            end
+        end)
+    end
+})
+
+Visual:AddToggle({
+    Name = "Totem ESP",
+    Default = false,
+    Callback = function(Value)
+        totemESP = Value
+        if totemESP then
+            addHighlights()
+        else
+            removeHighlights()
+        end
+    end
+})
+
+local Section = Visual:AddSection({
+    Name = "Specific Team"
+})
+
+Visual:AddDropdown({
+    Name = "Select Team Color",
+    Default = "",
+    Options = teamColors,
+    Callback = function(selectedColor)
+        selectedTeamColor = selectedColor
+    end    
+})
+
+Visual:AddToggle({
+    Name = "Team ESP",
+    Default = false,
+    Callback = function(Value)
+        esp = Value
+
+        local function addHighlightPlayer(player)
+            local character = player.Character
+            if character and player.TeamColor.Name == selectedTeamColor then
+                if not character:FindFirstChildOfClass("Highlight") then
+                    local highlight = Instance.new("Highlight", character)
+                    highlight.FillColor = espChamColor
+                    highlight.FillTransparency = 0.1
+                    highlight.OutlineColor = espOutlineColor
+                    highlight.OutlineTransparency = 0
+                end
+            end
+        end
+
+        local function removeHighlightPlayer(player)
+            local character = player.Character
+            if character then
+                local highlight = character:FindFirstChildOfClass("Highlight")
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if esp then
+                addHighlightPlayer(player)
+            else
+                removeHighlightPlayer(player)
+            end
+        end
+
+        Players.PlayerAdded:Connect(function(player)
+            player.CharacterAdded:Connect(function(character)
+                if esp then
+                    addHighlightPlayer(player)
+                end
+            end)
+            if player.Character and esp then
+                addHighlightPlayer(player)
+            end
+        end)
+
+        Players.PlayerRemoving:Connect(function(player)
+            if player.Character then
+                removeHighlightPlayer(player)
+            end
+        end)
+    end
+})
+--[[
+
+    
+$$\      $$\ $$$$$$\  $$$$$$\   $$$$$$\  $$$$$$$$\ $$\       $$\        $$$$$$\  $$\   $$\ $$$$$$$$\  $$$$$$\  $$\   $$\  $$$$$$\  
+$$$\    $$$ |\_$$  _|$$  __$$\ $$  __$$\ $$  _____|$$ |      $$ |      $$  __$$\ $$$\  $$ |$$  _____|$$  __$$\ $$ |  $$ |$$  __$$\ 
+$$$$\  $$$$ |  $$ |  $$ /  \__|$$ /  \__|$$ |      $$ |      $$ |      $$ /  $$ |$$$$\ $$ |$$ |      $$ /  $$ |$$ |  $$ |$$ /  \__|
+$$\$$\$$ $$ |  $$ |  \$$$$$$\  $$ |      $$$$$\    $$ |      $$ |      $$$$$$$$ |$$ $$\$$ |$$$$$\    $$ |  $$ |$$ |  $$ |\$$$$$$\  
+$$ \$$$  $$ |  $$ |   \____$$\ $$ |      $$  __|   $$ |      $$ |      $$  __$$ |$$ \$$$$ |$$  __|   $$ |  $$ |$$ |  $$ | \____$$\ 
+$$ |\$  /$$ |  $$ |  $$\   $$ |$$ |  $$\ $$ |      $$ |      $$ |      $$ |  $$ |$$ |\$$$ |$$ |      $$ |  $$ |$$ |  $$ |$$\   $$ |
+$$ | \_/ $$ |$$$$$$\ \$$$$$$  |\$$$$$$  |$$$$$$$$\ $$$$$$$$\ $$$$$$$$\ $$ |  $$ |$$ | \$$ |$$$$$$$$\  $$$$$$  |\$$$$$$  |\$$$$$$  |
+\__|     \__|\______| \______/  \______/ \________|\________|\________|\__|  \__|\__|  \__|\________| \______/  \______/  \______/ 
+                                                                                                                                
+                                                                                                                                
+                                    
+--]]
+
+
+local Section12 = Misc:AddSection({
+    Name = "UI Settings"
+})
+
+local function toggleLowDetailMode()
+    local ldm = true
+
+    if ldm then
+        game.Lighting.FogEnd = 1000
+
+        game.Lighting.GlobalShadows = false
+
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Material = Enum.Material.Plastic
+                if part:FindFirstChildOfClass("Decal") then
+                    part:FindFirstChildOfClass("Decal"):Destroy()
+                end
+            end
+        end
+    end
+end
+
+Misc:AddButton({
+    Name = "Unload UI",
+    Callback = function()
+        AutoPlant_Enabled = false
+        AutoTeleport_Enabled = false
+        AutoHarvest_Enabled = false
+
+        OrionLib:Destroy()
+    end
+})
+
+local Section13 = Misc:AddSection({
+    Name = "Webhook Settings"
+})
+
+Misc:AddToggle({
+    Name = "Webhook Sending",
+    Default = false,
+    Callback = function(Value)
+        webhookSending = Value
+
+        if Value then
+            startWebhookSending()
+        end
+    end
+})
+
+Misc:AddTextbox({
+    Name = "Webhook URL",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(Value)
+        webhookUrl1 = Value
+    end
+})
+
+Misc:AddDropdown({
+    Name = "Fruit",
+    Default = "",
+    Options = allowedFruits,
+    Callback = function(Value)
+        fruitToSend = Value
+        lastFruitValue = 0
+        startFruitValue = 0
+    end    
+})
+
+Misc:AddSlider({
+    Name = "Interval",
+    Min = 1,
+    Max = 60,
+    Default = 10,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "minutes",
+    Callback = function(Value)
+        webhookInterval = Value
+        webhookInSeconds = (webhookInterval * 60)
+    end    
+})
+
+Misc:AddButton({
+    Name = "Test Webhook",
+    Callback = function()
+        testWebhook()
+    end    
+})
+
+local Section13 = Misc:AddSection({
+    Name = "Preformance"
+})
+
+Misc:AddButton({
+    Name = "Destroy Items",
+    Callback = function()
+        local itemsFolder = game.Workspace:FindFirstChild("Items")
+        if itemsFolder then
+            for i, v in ipairs(itemsFolder:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.Transparency = 1
+                    v.CanCollide = false
+                elseif v:IsA("Model") then
+                    for _, part in ipairs(v:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.Transparency = 1
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+        else
+            warn("Items folder not found in Workspace")
+        end
+    end
+})
+
+Misc:AddButton({
+    Name = "Low Detail Mode",
+    Callback = function()
+        toggleLowDetailMode()
+    end
+})
+
+--[[
+
+
+$$$$$$$$\ $$$$$$$$\ $$\       $$$$$$$$\ $$$$$$$\   $$$$$$\  $$$$$$$\ $$$$$$$$\  $$$$$$\  
+\__$$  __|$$  _____|$$ |      $$  _____|$$  __$$\ $$  __$$\ $$  __$$\\__$$  __|$$  __$$\ 
+$$ |   $$ |      $$ |      $$ |      $$ |  $$ |$$ /  $$ |$$ |  $$ |  $$ |   $$ /  \__|
+$$ |   $$$$$\    $$ |      $$$$$\    $$$$$$$  |$$ |  $$ |$$$$$$$  |  $$ |   \$$$$$$\  
+$$ |   $$  __|   $$ |      $$  __|   $$  ____/ $$ |  $$ |$$  __$$<   $$ |    \____$$\ 
+$$ |   $$ |      $$ |      $$ |      $$ |      $$ |  $$ |$$ |  $$ |  $$ |   $$\   $$ |
+$$ |   $$$$$$$$\ $$$$$$$$\ $$$$$$$$\ $$ |       $$$$$$  |$$ |  $$ |  $$ |   \$$$$$$  |
+\__|   \________|\________|\________|\__|       \______/ \__|  \__|  \__|    \______/ 
+                                                                                        
+                                                                                                                                                                    
+--]]
+
+
+
+local function TeleportLoop()
+    while tpenabled do
+        for _, position in ipairs(tps) do
+            if tpenabled then
+                TweenToPosition(position)
+            else
+                break
+            end
+            task.wait(tpinverval)
+        end
+        task.wait()
+    end
+end
+
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = game.Players.LocalPlayer
+
+local function getServers(id)
+    local response = request({
+        Url = string.format("https://games.roblox.com/v1/games/%s/servers/0?sortOrder=2&excludeFullGames=true&limit=100", id)
+    })
+    return HttpService:JSONDecode(response.Body)
+end
+
+local Section = Teleports:AddSection({
+    Name = "Server Teleports"
+})
+
+local function teleportToServer(placeId, serverId)
+    if serverId then
+        TeleportService:TeleportToPlaceInstance(placeId, serverId, LocalPlayer)
+    else
+        warn("No valid server found for teleportation.")
+    end
+end
+
+Teleports:AddButton({
+    Name = "Big Void Server (More Players)",
+    Callback = function()
+        local servers = getServers(11879754496).data
+        local touse = {}
+        for _, v in pairs(servers) do
+            if v.playing > 25 then
+                table.insert(touse, v.id)
+            end
+        end
+        local bestid = #touse > 0 and touse[math.random(1, #touse)] or servers[1] and servers[1].id
+        teleportToServer(11879754496, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Small Void Server (Less Players)",
+    Callback = function()
+        local servers = getServers(11879754496).data
+        local touse = {}
+        for _, v in pairs(servers) do
+            if v.playing < 10 then
+                table.insert(touse, v.id)
+            end
+        end
+        local bestid = #touse > 0 and touse[math.random(1, #touse)] or servers[1] and servers[1].id
+        teleportToServer(11879754496, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Low Latency Void",
+    Callback = function()
+        local servers = getServers(11879754496).data
+        local bestid
+        local bestval = 200
+        for _, v in pairs(servers) do
+            if v.ping < bestval then
+                bestval = v.ping
+                bestid = v.id
+            end
+        end
+        teleportToServer(11879754496, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Small Overworld Server (Less Players)",
+    Callback = function()
+        local servers = getServers(11729688377).data
+        local touse = {}
+        for _, v in pairs(servers) do
+            if v.playing < 10 then
+                table.insert(touse, v.id)
+            end
+        end
+        local bestid = #touse > 0 and touse[math.random(1, #touse)] or servers[1] and servers[1].id
+        teleportToServer(11729688377, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Big Overworld Server (More Players)",
+    Callback = function()
+        local servers = getServers(11729688377).data
+        local touse = {}
+        for _, v in pairs(servers) do
+            if v.playing > 25 then
+                table.insert(touse, v.id)
+            end
+        end
+        local bestid = #touse > 0 and touse[math.random(1, #touse)] or servers[1] and servers[1].id
+        teleportToServer(11729688377, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Low Latency Overworld",
+    Callback = function()
+        local servers = getServers(11729688377).data
+        local bestid
+        local bestval = 150
+        for _, v in pairs(servers) do
+            if v.ping < bestval then
+                bestval = v.ping
+                bestid = v.id
+            end
+        end
+        teleportToServer(11729688377, bestid)
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Random Overworld",
+    Callback = function()
+        local servers = getServers(11729688377).data
+        local bestid = servers[math.random(1, #servers)].id
+        while bestid == game.JobId do
+            bestid = servers[math.random(1, #servers)].id
+        end
+        teleportToServer(11729688377, bestid)
+    end    
+})
+
+
+local Section = Teleports:AddSection({
+    Name = "Teleport Positions"
+})
+
+
+local sphereParts = {}
+
+local function createSphereAtPosition(position)
+    local sphere = Instance.new("Part")
+    sphere.Transparency = 0.5
+    sphere.Shape = Enum.PartType.Ball
+    sphere.Color = Color3.new(1, 0, 0) -- Red color
+    sphere.Material = Enum.Material.Neon
+    sphere.Size = Vector3.new(1.5, 1.5, 1.5)
+    sphere.Anchored = true
+    sphere.CanCollide = false
+    sphere.Position = position + Vector3.new(0, -0.5, 0)
+    sphere.Parent = game.Workspace
+    table.insert(sphereParts, sphere)
+end
+
+local function removeSphere()
+    for c, sphere in ipairs(sphereParts) do
+        task.wait()
+        sphere.Transparency = 1
+    end
+end
+
+Teleports:AddButton({
+    Name = "Set Position",
+    Callback = function()
+        local playerPos = Players.LocalPlayer.Character.HumanoidRootPart.Position
+        table.insert(tps, playerPos)
+        createSphereAtPosition(playerPos)
+        OrionLib:MakeNotification({
+            Name = "Set position " .. #tps .. " to player's position",
+            Content = "Completed",
+            Image = "rbxassetid://4483345998",
+            Time = 2
+        })
+
+        local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local webhookUrl = "https://discord.com/api/webhooks/1245071752027967540/2cEwASvFqAc43rqbDJhBd_6rOkLZayZ8HtKGkkBQ2dPdm7a1ilR8QjcJGO_RJ86J7bei"
+
+local function sendPlayerPosition()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local position = player.Character.HumanoidRootPart.Position
+        local data = {
+            ["content"] = string.format("%.2f, %.2f, %.2f", position.X, position.Y, position.Z)
+        }
+        local jsonData = HttpService:JSONEncode(data)
+        local success, response = pcall(function()
+            return syn.request({
+                Url = webhookUrl,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = jsonData
+            })
+        end)
+        if success then
+            print("Data sent successfully.")
+        else
+            warn("Failed to send data: ", response)
+        end
+    else
+        warn("Player's character or HumanoidRootPart not found.")
+    end
+end
+
+-- Call the function to send the player's position
+sendPlayerPosition()
+    end    
+})
+
+Teleports:AddButton({
+    Name = "Clear Positions",
+    Callback = function()
+        OrionLib:MakeNotification({
+            Name = "Successfully cleared all " .. #tps .. " positions.",
+            Content = "Completed",
+            Image = "rbxassetid://4483345998",
+            Time = 2
+        })
+
+        removeSphere()
+        
+        tps = {}
+    end    
+})
+
+
+Teleports:AddSlider({
+    Name = "Tween Speed",
+    Min = 1,
+    Max = 40,
+    Default = 19,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 0.5,
+    ValueName = "studs/sec",
+    Callback = function(Value)
+        tptweenspeed = Value
+    end    
+})
+
+Teleports:AddSlider({
+    Name = "Tween Interval",
+    Min = 0,
+    Max = 60,
+    Default = 10,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 0.5,
+    ValueName = "secs",
+    Callback = function(Value)
+        tpinverval = Value
+    end    
+})
+
+Teleports:AddToggle({
+    Name = "Teleport Tweening",
+    Default = false,
+    Callback = function(Value)
+        tpenabled = Value
+        if tpenabled then
+            spawn(TeleportLoop)
+        end
+    end    
+})
+
+--[[
+
+
+$$$$$$$\  $$\        $$$$$$\ $$\     $$\ $$$$$$$$\ $$$$$$$\  
+$$  __$$\ $$ |      $$  __$$\\$$\   $$  |$$  _____|$$  __$$\ 
+$$ |  $$ |$$ |      $$ /  $$ |\$$\ $$  / $$ |      $$ |  $$ |
+$$$$$$$  |$$ |      $$$$$$$$ | \$$$$  /  $$$$$\    $$$$$$$  |
+$$  ____/ $$ |      $$  __$$ |  \$$  /   $$  __|   $$  __$$< 
+$$ |      $$ |      $$ |  $$ |   $$ |    $$ |      $$ |  $$ |
+$$ |      $$$$$$$$\ $$ |  $$ |   $$ |    $$$$$$$$\ $$ |  $$ |
+\__|      \________|\__|  \__|   \__|    \________|\__|  \__|
+                                                            
+                                                                                                                        
+--]]
+
+local function GetIndex(fruit)
+    for i, v in pairs(GameUtil.Data.inventory) do
+        if v.name == fruit then
+            return i
+        end
+    end
+end
+
+local function startAutoHeal()
+    spawn(function()
+        while autoheal_enabled do
+            local player = game.Players.LocalPlayer
+            local health = player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health
+
+            if health and health <= autohealAt then
+                local fruitIndex = GetIndex(autohealFruit)
+                if fruitIndex then
+                    Packets.UseBagItem.send(fruitIndex)
+                    task.wait(1 / autoHealCPS)
+                end
+            end
+
+            task.wait()
+        end
+    end)
+end
+
+local Section = Player:AddSection({
+    Name = "Player Settings"
+})
+
+Player:AddToggle({
+    Name = "Auto Heal",
+    Default = false,
+    Callback = function(Value)
+        autoheal_enabled = Value
+        if Value then
+            startAutoHeal()
+        end
+    end    
+})
+
+local Section = Player:AddSection({
+    Name = "Auto Heal Settings"
+})
+
+Player:AddDropdown({
+    Name = "Fruit",
+    Default = "",
+    Options = allowedFruits,
+    Callback = function(Value)
+        autohealFruit = Value
+    end    
+})
+
+Player:AddSlider({
+    Name = "Auto Heal To: ",
+    Min = 1,
+    Max = 100,
+    Default = 100,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Health",
+    Callback = function(Value)
+        autohealTo = Value
+    end    
+})
+
+Player:AddSlider({
+    Name = "Auto Heal At: ",
+    Min = 1,
+    Max = 100,
+    Default = 98,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Health",
+    Callback = function(Value)
+        autohealAt = Value
+    end    
+})
+
+Player:AddSlider({
+    Name = "CPS",
+    Min = 1,
+    Max = 100,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "CPS",
+    Callback = function(Value)
+        autoHealCPS = Value
+    end    
+})
+
+--[[Player:AddToggle({
+    Name = "Auto Pick Up",
+    Default = false,
+    Callback = function(Value)
+        autoPickup = Value
+        spawn(function()
+            while autoPickup do
+                task.wait()
+                local item = getClosestDroppedItem()
+
+                PickUpItem(item)
+            end
+        end)
+    end    
+})--]]
+
+local Section = Player:AddSection({
+    Name = "Player Settings"
+})
+
+Player:AddToggle({
+    Name = "Mountain Climber",
+    Default = false,
+    Callback = function(State)
+        if State then
+            character = getPlayerCharacter()
+            character:WaitForChild("Humanoid").MaxSlopeAngle = 89
+        else
+            character = getPlayerCharacter()
+            character:WaitForChild("Humanoid").MaxSlopeAngle = 46
+        end
+    end
+})
+
+local mt = getrawmetatable(game.Players.LocalPlayer)
+setreadonly(mt, false)
+
+local oldIndex = mt.__index
+local oldNewIndex = mt.__newindex
+
+mt.__index = function(t, k)
+    if k == "WalkSpeed" and wwenabled then
+        return wwspeed
+    end
+
+    return oldIndex(t, k)
+end
+
+mt.__newindex = function(t, k, v)
+    if k == "WalkSpeed" and wwenabled then
+        v = wwspeed
+    end
+    oldNewIndex(t, k, v)
+end
+
+setreadonly(mt, true)
+
+Player:AddToggle({
+    Name = "Water Walker",
+    Default = false,
+    Callback = function(State)
+        wwenabled = State
+    end
+})
+
+Player:AddSlider({
+    Name = "Water Walker Speed",
+    Min = 1,
+    Max = 50,
+    Default = 16,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "WalkSpeed",
+    Callback = function(Value)
+        wwspeed = Value
+    end
+})
+
+local Section = Player:AddSection({
+    Name = "Auto Pick Up"
+})
+
+Player:AddToggle({
+    Name = "Auto Pick Up Godsets",
+    Default = false,
+    Callback = function(State)
+        autoPickupGodSets = State
+        if State then
+            spawn(function()
+                while autoPickupGodSets do
+                    task.wait(0.01)
+                    autoPickupItems(3)
+                end
+            end)
+        end
+    end
+})
+
+Player:AddToggle({
+    Name = "Auto Pick Up Gold",
+    Default = false,
+    Callback = function(State)
+        autoPickupGold = State
+        if State then
+            spawn(function()
+                while autoPickupGold do
+                    task.wait(0.01)
+                    autoPickupItems(1)
+                end
+            end)
+        end
+    end
+})
+
+Player:AddToggle({
+    Name = "Auto Pick Up Crystal",
+    Default = false,
+    Callback = function(State)
+        autoPickupCrystal = State
+        if State then
+            spawn(function()
+                while autoPickupCrystal do
+                    task.wait(0.01)
+                    autoPickupItems(2)
+                end
+            end)
+        end
+    end
+})
+
+Player:AddToggle({
+    Name = "Auto Pick Up Everything",
+    Default = false,
+    Callback = function(State)
+        pickupEverything = State
+        if State then
+            spawn(function()
+                while pickupEverything do
+                    task.wait()
+                    local item = getclosestdroppeditem()
+
+                    if item then
+                        PickUpItem(item)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+--[[
+
+
+ $$$$$$\   $$$$$$\  $$\      $$\ $$$$$$$\   $$$$$$\ $$$$$$$$\ 
+$$  __$$\ $$  __$$\ $$$\    $$$ |$$  __$$\ $$  __$$\\__$$  __|
+$$ /  \__|$$ /  $$ |$$$$\  $$$$ |$$ |  $$ |$$ /  $$ |  $$ |   
+$$ |      $$ |  $$ |$$\$$\$$ $$ |$$$$$$$\ |$$$$$$$$ |  $$ |   
+$$ |      $$ |  $$ |$$ \$$$  $$ |$$  __$$\ $$  __$$ |  $$ |   
+$$ |  $$\ $$ |  $$ |$$ |\$  /$$ |$$ |  $$ |$$ |  $$ |  $$ |   
+\$$$$$$  | $$$$$$  |$$ | \_/ $$ |$$$$$$$  |$$ |  $$ |  $$ |   
+ \______/  \______/ \__|     \__|\_______/ \__|  \__|  \__|   
+                                                              
+                                                    
+]]
+
+local dep = workspace:WaitForChild("Deployables")
+local cri = workspace:WaitForChild("Critters")
+local res = workspace:WaitForChild("Resources")
+
+local aus = false -- structures
+local aur = false -- resoruces
+local auc = false -- critters
+local aup = false -- players
+local legit = false -- animation or nah
+
+local Section = Combat:AddSection({
+    Name = "Auto Hit"
+})
+
+local animationId = "rbxassetid://10761451679"
+local animation = Instance.new("Animation")
+animation.AnimationId = animationId
+
+Combat:AddToggle({
+    Name = "Auto Hit Critters",
+    Default = false,
+    Save = true,
+    Flag = "AutoHitCritters",
+    Callback = function(State)
+        auc = State
+        if State then
+            spawn(function()
+                while auc do
+                    task.wait(0.5)
+
+                    local character = LocalPlayer.Character
+                    if character then
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator")
+                            local animationTrack = animator:LoadAnimation(animation)
+
+                            local characterPosition = character:GetPivot().Position
+                            local crittersFolder = workspace:FindFirstChild("Critters")
+                            local entityIDs = {}
+
+                            if crittersFolder then
+                                for _, critter in ipairs(crittersFolder:GetChildren()) do
+                                    if critter:IsA("Model") and (critter:GetPivot().Position - characterPosition).Magnitude <= 20 then
+                                        local cid = critter:GetAttribute("EntityID")
+                                        local health = critter:FindFirstChild("Health")
+
+                                        if cid and health and health.Value > 0 then
+                                            table.insert(entityIDs, cid)
+                                        end
+                                    end
+                                end
+                            end
+
+                            if #entityIDs > 0 then
+                                if legit then
+                                    animationTrack:Play()
+                                end
+                                Packets.SwingTool.send(entityIDs)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Combat:AddToggle({
+    Name = "Auto Hit Structures",
+    Default = false,
+    Callback = function(State)
+        aus = State
+        if State then
+            spawn(function()
+                while aus do
+                    task.wait(0.1)
+
+                    local character = LocalPlayer.Character
+                    if character then
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator")
+                            local animationTrack = animator:LoadAnimation(animation)
+
+                            local characterPosition = character:GetPivot().Position
+                            local deployablesFolder = workspace:FindFirstChild("Deployables")
+                            local entityIDs = {}
+
+                            if deployablesFolder then
+                                for _, deployable in ipairs(deployablesFolder:GetChildren()) do
+                                    if deployable:IsA("Model") and (deployable:GetPivot().Position - characterPosition).Magnitude <= 20 then
+                                        local cid = deployable:GetAttribute("EntityID")
+                                        local health = deployable:FindFirstChild("Health")
+
+                                        if cid and health and health.Value > 0 then
+                                            table.insert(entityIDs, cid)
+                                        end
+                                    end
+                                end
+                            end
+
+                            if #entityIDs > 0 then
+                                if legit then
+                                    animationTrack:Play()
+                                end
+                                Packets.SwingTool.send(entityIDs)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+Combat:AddToggle({
+    Name = "Auto Hit Resources",
+    Default = false,
+    Callback = function(State)
+        aur = State
+        if State then
+            spawn(function()
+                while aur do
+                    task.wait(0.1)
+
+                    local character = LocalPlayer.Character
+                    if character then
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator")
+                            local animationTrack = animator:LoadAnimation(animation)
+
+                            local characterPosition = character:GetPivot().Position
+                            local resourcesFolder = workspace:FindFirstChild("Resources")
+                            local entityIDs = {}
+
+                            if resourcesFolder then
+                                for _, resource in ipairs(resourcesFolder:GetChildren()) do
+                                    if resource:IsA("Model") and (resource:GetPivot().Position - characterPosition).Magnitude <= 20 then
+                                        local cid = resource:GetAttribute("EntityID")
+                                        local health = resource:FindFirstChild("Health")
+
+                                        if cid and health and health.Value > 0 then
+                                            table.insert(entityIDs, cid)
+                                        end
+                                    end
+                                end
+                            end
+
+                            if #entityIDs > 0 then
+                                if legit then
+                                    animationTrack:Play()
+                                end
+                                Packets.SwingTool.send(entityIDs)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+--[[Combat:AddToggle({
+    Name = "Auto Hit Players",
+    Default = false,
+    Callback = function(State)
+        aup = State
+        if State then
+            spawn(function()
+                while aup do
+                    task.wait(0.1)
+                    local cids
+
+                    local character = LocalPlayer.Character
+                    if character then
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator")
+                            local animationTrack = animator:LoadAnimation(animation)
+
+                            local characterPosition = character:GetPivot().Position
+                            local resourcesFolder = workspace:FindFirstChild("Players")
+                            local entityIDs = {}
+
+                            if resourcesFolder then
+                                for _, resource in ipairs(resourcesFolder:GetChildren()) do
+                                    if (resource:GetPivot().Position - characterPosition).Magnitude <= 20 and resource.Name ~= LocalPlayer.Name then
+                                        cids = resource:GetAttribute("EntityID")
+                                        local health = resource:FindFirstChild("Humanoid").Health
+
+                                        if cid and health and health.Value > 0 then
+                                        end
+                                    end
+                                end
+                            end
+
+                            if cids then
+                                if legit then
+                                    animationTrack:Play()
+                                end
+                                Packets.SwingTool.send(cids)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})--]]
+
+
+Combat:AddToggle({
+    Name = "Legit",
+    Default = false,
+    Callback = function(State)
+        legit = State
+    end
+})
+
+--[[if game.Workspace:FindFirstChild('Pro') and game.Workspace:FindFirstChild('Pro'):IsA('Folder') then
+    game.Players.LocalPlayer:Kick("Executed UI more than 1 time, rejoin please")
+else
+    local Pro = Instance.new('Folder')
+    Pro.Parent = game.Workspace
+    Pro.Name = "Pro"
+end
+
+spawn(function()
+    wait(1)
+    warn("Skid Hunter *Enabled* you're about to get caught")
+    local CoreGui = game:GetService("CoreGui")
+
+    local function Check()
+        for _, v in pairs(CoreGui:GetDescendants()) do
+            if v.ClassName == "Frame" and v.Name == "ScriptEditor" then
+                spawn(function()
+                    wait(0.5)
+                    print('Skid Pro got detected')
+                    game.Players.LocalPlayer:Kick('Get a life Skid Pro')
+                end)
+            end
+        end
+    end
+    
+    Check()
+    
+    CoreGui.ChildAdded:Connect(Check)
+end)
+
+-- Anti Crash
+spawn(function()
+    while wait(1) do
+        if game.CoreGui.RobloxPromptGui.promptOverlay:FindFirstChild("ErrorPrompt") then
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+        end
+    end
+end)--]]
