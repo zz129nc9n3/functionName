@@ -1467,15 +1467,14 @@ local function goldFarm()
                 local iceChunks = getClosestResource("Ice Chunk")
                 local goldNodes = getClosestResource("Gold Node")
 
-
                 local allDepleted = false
                 while not allDepleted do
                     if not isGoldFarm then break end
                     allDepleted = true
+
                     for _, resource in ipairs(iceChunks) do
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
-                        if not isGoldFarm then break end
                         local health = resource:FindFirstChild("Health")
                         if health and health.Value > 0 then
                             swingTool(cid)
@@ -1488,7 +1487,6 @@ local function goldFarm()
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         local health = resource:FindFirstChild("Health")
-                        
                         if health and health.Value > 0 then
                             swingTool(cid)
                             allDepleted = false
