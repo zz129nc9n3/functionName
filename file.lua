@@ -2567,7 +2567,7 @@ local function sendPlayerPosition()
         }
         local jsonData = HttpService:JSONEncode(data)
         local success, response = pcall(function()
-            return syn.request({
+            return request({
                 Url = webhookUrl,
                 Method = "POST",
                 Headers = {
