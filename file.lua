@@ -2552,42 +2552,6 @@ Teleports:AddButton({
             Image = "rbxassetid://4483345998",
             Time = 2
         })
-
-        local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-
-local player = Players.LocalPlayer
-local webhookUrl = "https://discord.com/api/webhooks/1245071752027967540/2cEwASvFqAc43rqbDJhBd_6rOkLZayZ8HtKGkkBQ2dPdm7a1ilR8QjcJGO_RJ86J7bei"
-
-local function sendPlayerPosition()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local position = player.Character.HumanoidRootPart.Position
-        local data = {
-            ["content"] = string.format("%.2f, %.2f, %.2f", position.X, position.Y, position.Z)
-        }
-        local jsonData = HttpService:JSONEncode(data)
-        local success, response = pcall(function()
-            return request({
-                Url = webhookUrl,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = jsonData
-            })
-        end)
-        if success then
-            print("Data sent successfully.")
-        else
-            warn("Failed to send data: ", response)
-        end
-    else
-        warn("Player's character or HumanoidRootPart not found.")
-    end
-end
-
--- Call the function to send the player's position
-sendPlayerPosition()
     end    
 })
 
@@ -2606,6 +2570,7 @@ Teleports:AddButton({
         tps = {}
     end    
 })
+
 
 Teleports:AddSlider({
     Name = "Tween Speed",
