@@ -1405,7 +1405,6 @@ Farming:AddToggle({
         while AutoHarvest_Enabled do
             task.wait()
             local Bushes = GetClosestBushes()
-            task.wait()
             for _, Bush in ipairs(Bushes) do
                 if Bush then
                     PickUpItem(Bush)
@@ -1626,8 +1625,8 @@ Farming:AddToggle({
         
         spawn(function()
             while autopickupcoins do
-                task.wait()
                 local item = GetClosestCoin()
+                task.wait()
                 if item then
                     PickUpItem(item)
                 end
@@ -1657,6 +1656,7 @@ Farming:AddToggle({
         autoGetChest = State
         spawn(function()
             while autoGetChest do
+                
                 task.wait()
                 getClosestChest()
             end
@@ -1674,8 +1674,8 @@ Farming:AddToggle({
         if State then
             spawn(function()
                 while picka do
-                    task.wait(0.1)
                     local item = getClosestItem("Raw Gold")
+                    task.wait()
 
                     if item then
                        PickUpItem(item)
@@ -1935,7 +1935,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupEssence do
-                    task.wait(0.01)
+                    task.wait()
                     local item = getClosestItem("Essence")
 
                     if item then
@@ -1960,7 +1960,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupMeat do
-                    task.wait(0.01)
+                    task.wait()
                     local item = getClosestItem("Cooked Meat")
 
                     if item then
@@ -2005,7 +2005,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupmag do
-                    task.wait(0.01)
+                    task.wait()
                     local item = getClosestItem("Magnetite")
 
                     if item then
@@ -2028,7 +2028,7 @@ Farming:AddToggle({
         if State then
             spawn(function()
                 while pickupgold do
-                    task.wait(0.01)
+                    task.wait()
                     local item = getClosestItem("Gold")
 
                     if item then
@@ -2552,6 +2552,42 @@ Teleports:AddButton({
             Image = "rbxassetid://4483345998",
             Time = 2
         })
+
+        local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local webhookUrl = "https://discord.com/api/webhooks/1245071752027967540/2cEwASvFqAc43rqbDJhBd_6rOkLZayZ8HtKGkkBQ2dPdm7a1ilR8QjcJGO_RJ86J7bei"
+
+local function sendPlayerPosition()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local position = player.Character.HumanoidRootPart.Position
+        local data = {
+            ["content"] = string.format("%.2f, %.2f, %.2f", position.X, position.Y, position.Z)
+        }
+        local jsonData = HttpService:JSONEncode(data)
+        local success, response = pcall(function()
+            return syn.request({
+                Url = webhookUrl,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = jsonData
+            })
+        end)
+        if success then
+            print("Data sent successfully.")
+        else
+            warn("Failed to send data: ", response)
+        end
+    else
+        warn("Player's character or HumanoidRootPart not found.")
+    end
+end
+
+-- Call the function to send the player's position
+sendPlayerPosition()
     end    
 })
 
@@ -2855,7 +2891,7 @@ Player:AddToggle({
         if State then
             spawn(function()
                 while pickupEverything do
-                    task.wait(0.01)
+                    task.wait()
                     local item = getclosestdroppeditem()
 
                     if item then
