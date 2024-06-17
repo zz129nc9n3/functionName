@@ -473,6 +473,35 @@ local function getClosestChest()
     return nearestChest
 end
 
+local function getClosestItem(name)
+    local closestItem
+    local minDistance = 1
+    local maxDistance = 35
+    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local Items = game.Workspace:FindFirstChild("Items")
+
+    if not RootPart or not Items then
+        return nil
+    end
+
+    local PlayerPosition = RootPart.Position
+    for _, item in pairs(Items:GetChildren()) do
+        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
+
+            if item.Name == name then
+            local ItemPosition = item:GetPivot().Position
+            local Distance = (PlayerPosition - ItemPosition).Magnitude
+            if Distance < maxDistance then
+                minDistance = Distance
+                closestItem = item
+            end
+        end
+        end
+    end
+
+    return closestItem
+end
+
 
 local allowedBushNames = {
     "Berry Bush",
@@ -907,179 +936,6 @@ local function getClosestDroppedItem()
     end
 
     return closestItem
-end
-
-local function getClosestDroppedGold()
-    local closestItem
-    local minDistance = 15
-    local maxDistance = 35
-    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local Items = game.Workspace:FindFirstChild("Items")
-
-    if not RootPart or not Items then
-        return nil
-    end
-
-    local PlayerPosition = RootPart.Position
-    for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
-
-            if item.Name == "Raw Gold" then
-            local ItemPosition = item:GetPivot().Position
-            local Distance = (PlayerPosition - ItemPosition).Magnitude
-            if Distance < maxDistance then
-                minDistance = Distance
-                closestItem = item
-            end
-        end
-        end
-    end
-
-    return closestItem
-end
-
-local function getClosestItem(name)
-    local closestItem
-    local minDistance = 1
-    local maxDistance = 35
-    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local Items = game.Workspace:FindFirstChild("Items")
-
-    if not RootPart or not Items then
-        return nil
-    end
-
-    local PlayerPosition = RootPart.Position
-    for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
-
-            if item.Name == name then
-            local ItemPosition = item:GetPivot().Position
-            local Distance = (PlayerPosition - ItemPosition).Magnitude
-            if Distance < maxDistance then
-                minDistance = Distance
-                closestItem = item
-            end
-        end
-        end
-    end
-
-    return closestItem
-end
-
-local function autoPickupItems(itemType)
-    local function getClosestItem(itemName)
-        local closestItem = nil
-        local minDistance = 15
-        local maxDistance = 35
-        local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local Items = game.Workspace:FindFirstChild("Items")
-
-        if not RootPart or not Items then
-            return nil
-        end
-
-        local PlayerPosition = RootPart.Position
-        for _, item in pairs(Items:GetChildren()) do
-            if item.Name == itemName and (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation")) then
-                local ItemPosition = item:GetPivot().Position
-                local Distance = (PlayerPosition - ItemPosition).Magnitude
-                if Distance < maxDistance and Distance < minDistance then
-                    minDistance = Distance
-                    closestItem = item
-                end
-            end
-        end
-
-        return closestItem
-    end
-
-    while true do
-        if itemType == 1 then
-            local item = getClosestItem("Gold")
-            if item then
-                PickUpItem(item)
-            end
-        elseif itemType == 2 then
-            local item = getClosestItem("Crystal Chunk")
-            if item then
-                PickUpItem(item)
-            end
-        elseif itemType == 3 then
-            local item1 = getClosestItem("Gold")
-            if item1 then
-                PickUpItem(item1)
-            end
-            local item2 = getClosestItem("Crystal Chunk")
-            if item2 then
-                PickUpItem(item2)
-            end
-        end
-        task.wait(0.01)
-    end
-end
-
-local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
-
-local function getHumanoidRootPart()
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    return character:WaitForChild("HumanoidRootPart")
-end
-
-local function GetClosestPress()
-    local characterPosition = LocalPlayer.Character:GetPivot().Position
-    local Parts = workspace:GetPartBoundsInRadius(characterPosition, 35)
-    local nearestPress = nil
-    local shortestDistance = math.huge
-
-    for _, Part in ipairs(Parts) do
-        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == "Coin Press" then
-            local distance = (Part.Position - characterPosition).Magnitude
-            if distance < shortestDistance then
-                shortestDistance = distance
-                nearestPress = Part.Parent
-            end
-        end
-    end
-
-    return nearestPress
-end
-
-local function dropGold(index)
-    if index then
-        Packets.DropBagItem.send(index)
-    end
-end
-
-local function autoHit(targetName1, targetName2)
-    local targets1 = getTargets(15, targetName1)
-    local allTargets = {}
-
-    for _, target in ipairs(targets1) do
-        table.insert(allTargets, target)
-    end
-
-    if targetName2 then
-        local targets2 = getTargets(15, targetName2)
-        for _, target in ipairs(targets2) do
-            table.insert(allTargets, target)
-        end
-    end
-
-    for _, target in ipairs(allTargets) do
-        if target and target:FindFirstChild("Health") and target.Health.Value > 0 then
-            while target and target:FindFirstChild("Health") and target.Health.Value > 0 do
-                swingTool(target:GetAttribute("EntityID"))
-                task.wait(0.1)
-            end
-        end
-    end
 end
 
 local function TogglenodeAura()
@@ -1671,16 +1527,6 @@ local function TweenToPosition(position)
     tween.Completed:Wait()
 end
 
-local function allResourcesDepleted(resources)
-    for _, resource in ipairs(resources) do
-        local health = resource:FindFirstChild("Health")
-        if health and health.Value > 0 then
-            return false
-        end
-    end
-    return true
-end
-
 local picka = false
 
 local function test()
@@ -1734,9 +1580,8 @@ local function test()
             local rawGoldValue = getValue("Raw Gold")
 
             if rawGoldValue then
+                picka = false
                 for i = 1, rawGoldValue do
-                    picka = false
-
                     task.wait(0.02) 
                     local index = GetIndex("Raw Gold")
                     if index then
@@ -1744,8 +1589,9 @@ local function test()
                     end
                 end
             
-                task.wait(7.5)
+                task.wait(10)
             end
+
             picka = true
         end
     end
@@ -1973,23 +1819,27 @@ Farming:AddToggle({
     end
 })
 
+local function goldLoop()
+    while true do
+        task.wait()
+        while picka do
+            task.wait(0.1)
+            local item = getClosestItem("Raw Gold")
+
+            if item then
+               PickUpItem(item)
+            end
+        end
+    end
+end
+
+spawn(goldLoop)
+
 Farming:AddToggle({
     Name = "Pick Up Raw Gold",
     Default = false,
     Callback = function(State)
         picka = State
-        if State then
-            spawn(function()
-                while picka do
-                    task.wait(0.1)
-                    local item = getClosestItem("Raw Gold")
-
-                    if item then
-                       PickUpItem(item)
-                    end
-                end
-            end)
-        end
     end
 })
 
