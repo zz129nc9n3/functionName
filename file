@@ -735,19 +735,6 @@ end
 
 local findPlantBoxNext = true
 
-local function FindTeleportTarget()
-    if findPlantBoxNext then
-        local plantBox = GetRandomTeleportBox()
-        findPlantBoxNext = false
-        return plantBox
-    else
-        local randomBush = GetRandomBush()
-        findPlantBoxNext = true 
-        return randomBush
-    end
-end
-
-
 local function addHighlights()
     local totems = game.Workspace.Totems:GetChildren()
     for _, totem in ipairs(totems) do
@@ -1321,7 +1308,7 @@ Farming:AddToggle({
                 task.wait()
 
                 if target == nil then
-                    task.wait(1) 
+                    task.wait(0.1) 
                     continue
                 end
     
@@ -1332,10 +1319,10 @@ Farming:AddToggle({
                 Tween:Play()
                 Tween.Completed:Wait()
             else
-                local target = FindTeleportTarget()
+                local target = getTPBox()
 
                 if target == nil then
-                    task.wait(1) 
+                    task.wait(0.1) 
                     continue
                 end
     
@@ -1346,7 +1333,6 @@ Farming:AddToggle({
                 Tween:Play()
                 Tween.Completed:Wait()
     
-                task.wait()
             end
         end
     end
