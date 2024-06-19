@@ -1689,6 +1689,17 @@ local picka = false
 
 local function test()
 
+    spawn(function()
+        while picka do
+            task.wait()
+            local item = getClosestItem("Raw Gold")
+
+            if item then
+               PickUpItem(item)
+            end
+        end
+    end)
+
     while true do
 
     task.wait()
@@ -1746,7 +1757,7 @@ local function test()
                     Packets.DropBagItem.send(index)
                 end
             end
-            task.wait(16)
+            task.wait(14)
         end
 
     end
