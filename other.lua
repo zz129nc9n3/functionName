@@ -1,3 +1,440 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Packets = require(ReplicatedStorage.Modules.Packets)
+local GameUtil = require(ReplicatedStorage.Modules.GameUtil)
+
+local nodePos = {
+    Vector3.new(916.30, -3.00, -1391.05),
+    Vector3.new(914.92, -1.76, -1411.50),
+    Vector3.new(941.17, -2.51, -1428.51),
+    Vector3.new(955.71, -3.00, -1390.46),
+    Vector3.new(920.78, -3.00, -1331.88),
+    Vector3.new(856.16, -7.00, -1224.48),
+    Vector3.new(761.09, -3.00, -1081.66),
+    Vector3.new(681.07, -7.67, -961.42),
+    Vector3.new(608.27, -5.53, -804.39),
+    Vector3.new(602.81, -3.00, -794.60),
+    Vector3.new(551.22, -3.00, -688.65),
+    Vector3.new(391.80, -7.20, -477.33),
+    Vector3.new(500.41, -4.82, -391.28),
+    Vector3.new(516.83, -3.08, -389.32),
+    Vector3.new(531.07, -3.61, -388.65),
+    Vector3.new(537.89, -0.13, -382.53),
+    Vector3.new(534.27, 2.38, -394.81),
+    Vector3.new(539.79, 8.27, -395.79),
+    Vector3.new(552.22, 11.36, -394.01),
+    Vector3.new(565.48, 8.42, -393.14),
+    Vector3.new(577.87, 3.79, -387.23),
+    Vector3.new(587.17, -2.44, -380.92),
+    Vector3.new(595.88, -8.21, -371.96),
+    Vector3.new(613.49, -7.26, -381.61),
+    Vector3.new(635.91, -7.11, -374.28),
+    Vector3.new(622.28, -7.45, -361.79),
+    Vector3.new(608.49, -7.36, -355.52),
+    Vector3.new(599.44, -7.61, -374.59),
+    Vector3.new(590.38, -3.67, -386.28),
+    Vector3.new(583.38, 0.74, -389.95),
+    Vector3.new(576.65, 4.63, -387.26),
+    Vector3.new(564.96, 8.48, -392.30),
+    Vector3.new(553.36, 13.22, -399.01),
+    Vector3.new(550.20, 17.84, -407.81),
+    Vector3.new(543.40, 20.22, -414.49),
+    Vector3.new(544.08, 24.65, -419.18),
+    Vector3.new(544.71, 30.70, -423.50),
+    Vector3.new(545.49, 34.01, -428.91),
+    Vector3.new(552.18, 35.90, -427.77),
+    Vector3.new(560.19, 38.77, -419.47),
+    Vector3.new(566.37, 43.81, -420.84),
+    Vector3.new(574.22, 44.83, -421.18),
+    Vector3.new(580.86, 48.45, -421.47),
+    Vector3.new(586.91, 51.16, -421.74),
+    Vector3.new(591.85, 50.50, -421.05),
+    Vector3.new(610.04, 49.04, -427.43),
+    Vector3.new(624.31, 51.63, -416.15),
+    Vector3.new(638.84, 56.59, -408.19),
+    Vector3.new(642.45, 59.32, -409.98),
+    Vector3.new(647.16, 62.86, -412.76),
+    Vector3.new(652.63, 67.04, -414.07),
+    Vector3.new(659.63, 69.06, -418.76),
+    Vector3.new(666.13, 71.10, -423.70),
+    Vector3.new(673.88, 73.83, -426.08),
+    Vector3.new(675.68, 76.20, -422.34),
+    Vector3.new(676.42, 79.69, -418.16),
+    Vector3.new(677.42, 81.96, -414.84),
+    Vector3.new(672.84, 81.87, -413.62),
+    Vector3.new(672.60, 83.98, -408.70),
+    Vector3.new(674.15, 83.53, -403.09),
+    Vector3.new(675.29, 82.44, -398.99),
+    Vector3.new(679.79, 81.12, -392.74),
+    Vector3.new(677.00, 77.49, -384.29),
+    Vector3.new(673.08, 78.24, -376.14),
+    Vector3.new(669.82, 73.98, -372.90),
+    Vector3.new(666.21, 70.01, -369.17),
+    Vector3.new(664.62, 66.33, -367.22),
+    Vector3.new(663.14, 62.78, -364.23),
+    Vector3.new(662.12, 59.88, -361.20),
+    Vector3.new(661.24, 58.03, -358.51),
+    Vector3.new(659.88, 55.04, -354.41),
+    Vector3.new(661.10, 53.60, -317.19),
+    Vector3.new(661.63, 53.81, -306.43),
+    Vector3.new(660.84, 55.48, -297.97),
+    Vector3.new(660.96, 59.16, -292.47),
+    Vector3.new(661.08, 61.19, -287.09),
+    Vector3.new(661.22, 62.61, -280.66),
+    Vector3.new(661.35, 62.85, -274.77),
+    Vector3.new(660.10, 64.59, -267.65),
+    Vector3.new(654.14, 63.61, -263.72),
+    Vector3.new(647.57, 62.03, -259.08),
+    Vector3.new(640.85, 59.95, -253.70),
+    Vector3.new(636.23, 60.55, -247.72),
+    Vector3.new(632.08, 60.99, -242.32),
+    Vector3.new(631.06, 60.50, -237.58),
+    Vector3.new(628.07, 56.63, -233.22),
+    Vector3.new(625.03, 51.06, -224.79),
+    Vector3.new(623.71, 46.22, -216.35),
+    Vector3.new(621.64, 43.32, -208.75),
+    Vector3.new(619.96, 41.60, -201.82),
+    Vector3.new(621.80, 38.79, -194.87),
+    Vector3.new(620.33, 32.52, -188.38),
+    Vector3.new(622.90, 30.93, -181.24),
+    Vector3.new(627.49, 29.29, -176.21),
+    Vector3.new(635.30, 29.65, -173.56),
+    Vector3.new(644.22, 27.98, -175.75),
+    Vector3.new(650.84, 29.58, -175.23),
+    Vector3.new(655.45, 32.12, -177.75),
+    Vector3.new(663.71, 32.89, -181.76),
+    Vector3.new(662.34, 31.81, -169.89),
+    Vector3.new(662.36, 26.17, -163.52),
+    Vector3.new(660.87, 16.04, -158.52),
+    Vector3.new(656.80, 7.09, -150.81),
+    Vector3.new(654.34, -0.97, -143.55),
+    Vector3.new(651.95, -3.98, -136.52),
+    Vector3.new(644.94, -4.68, -119.66),
+    Vector3.new(554.60, -5.67, 110.38),
+    Vector3.new(539.92, -3.23, 157.48),
+    Vector3.new(539.80, -0.86, 167.28),
+    Vector3.new(538.69, 2.04, 173.23),
+    Vector3.new(539.98, 4.31, 180.13),
+    Vector3.new(536.36, 10.45, 181.76),
+    Vector3.new(533.55, 10.96, 183.24),
+    Vector3.new(470.90, 13.44, 152.68),
+    Vector3.new(495.88, 13.02, 186.44),
+    Vector3.new(469.76, 11.47, 230.41),
+    Vector3.new(482.84, 12.30, 224.32),
+    Vector3.new(488.27, 11.72, 222.30),
+    Vector3.new(492.47, 9.65, 221.33),
+    Vector3.new(497.28, 7.81, 221.56),
+    Vector3.new(502.93, 2.16, 222.54),
+    Vector3.new(506.62, -1.62, 225.81),
+    Vector3.new(509.19, -3.03, 231.96),
+    Vector3.new(509.37, -3.00, 263.13),
+    Vector3.new(708.25, -3.00, 294.24),
+    Vector3.new(862.61, -7.05, 378.53),
+    Vector3.new(942.97, -6.24, 421.56),
+    Vector3.new(947.21, -2.15, 424.58),
+    Vector3.new(956.64, 1.22, 428.54),
+    Vector3.new(965.38, 2.17, 432.27),
+    Vector3.new(976.34, -0.10, 437.50),
+    Vector3.new(1048.12, -1.19, 482.58),
+    Vector3.new(1062.12, 1.60, 496.06),
+    Vector3.new(1073.45, 2.62, 510.82),
+    Vector3.new(1088.47, 1.86, 527.22),
+    Vector3.new(1104.54, -1.83, 544.76),
+    Vector3.new(1123.12, -2.38, 563.28),
+    Vector3.new(1144.15, -1.54, 585.13),
+    Vector3.new(1160.40, -3.22, 576.27),
+    Vector3.new(1175.81, -5.34, 559.35),
+    Vector3.new(1184.15, -7.24, 551.67),
+    Vector3.new(1195.83, -8.68, 541.73),
+    Vector3.new(1202.84, -11.17, 535.77),
+    Vector3.new(1213.86, -11.85, 526.40),
+    Vector3.new(1210.66, -14.14, 516.65),
+    Vector3.new(1209.23, -15.00, 512.28),
+    Vector3.new(1205.63, -15.00, 502.64),
+    Vector3.new(1199.79, -15.01, 491.03),
+    Vector3.new(1194.76, -15.30, 481.03),
+    Vector3.new(1186.28, -15.37, 464.17),
+    Vector3.new(1188.71, -15.00, 477.06),
+    Vector3.new(1167.88, -15.05, 482.07),
+    Vector3.new(1193.89, -15.22, 480.83),
+    Vector3.new(1200.69, -15.00, 494.65),
+    Vector3.new(1207.44, -15.00, 507.24),
+    Vector3.new(1211.00, -14.87, 514.63),
+    Vector3.new(1213.88, -12.47, 520.60),
+    Vector3.new(1218.30, -13.21, 529.76),
+    Vector3.new(1221.55, -14.34, 536.52),
+    Vector3.new(1226.22, -12.36, 540.45),
+    Vector3.new(1230.34, -11.41, 546.45),
+    Vector3.new(1236.08, -13.00, 551.66),
+    Vector3.new(1240.74, -15.07, 559.68),
+    Vector3.new(1242.52, -15.70, 570.77),
+    Vector3.new(1245.38, -15.89, 578.60),
+    Vector3.new(1251.48, -15.57, 587.52),
+    Vector3.new(1270.12, -15.44, 603.03),
+    Vector3.new(1288.32, -16.27, 625.10),
+    Vector3.new(1297.85, -16.76, 636.74),
+    Vector3.new(1304.87, -16.29, 643.26),
+    Vector3.new(1309.65, -15.63, 653.57),
+    Vector3.new(1314.60, -15.89, 662.01),
+    Vector3.new(1306.62, -16.30, 668.81),
+    Vector3.new(1294.55, -19.00, 679.08),
+    Vector3.new(1284.93, -19.00, 685.69),
+    Vector3.new(1292.78, -19.00, 680.53),
+    Vector3.new(1301.47, -17.18, 674.81),
+    Vector3.new(1310.56, -15.64, 668.84),
+    Vector3.new(1319.86, -15.72, 667.23),
+    Vector3.new(1329.68, -15.53, 668.89),
+    Vector3.new(1339.68, -15.89, 672.52),
+    Vector3.new(1356.52, -18.99, 677.60),
+    Vector3.new(1349.70, -17.34, 675.60),
+    Vector3.new(1340.71, -15.91, 672.97),
+    Vector3.new(1333.79, -15.79, 667.52),
+    Vector3.new(1325.76, -15.51, 663.48),
+    Vector3.new(1317.01, -15.83, 659.08),
+    Vector3.new(1310.86, -15.72, 648.73),
+    Vector3.new(1300.86, -16.63, 638.42),
+    Vector3.new(1291.58, -16.59, 628.86),
+    Vector3.new(1288.22, -16.33, 623.50),
+    Vector3.new(1280.03, -15.74, 615.17),
+    Vector3.new(1277.50, -15.53, 610.76),
+    Vector3.new(1254.62, -15.44, 589.41),
+    Vector3.new(1243.41, -15.77, 573.05),
+    Vector3.new(1240.00, -15.38, 557.21),
+    Vector3.new(1233.29, -12.59, 552.60),
+    Vector3.new(1227.22, -11.39, 545.07),
+    Vector3.new(1220.42, -12.81, 539.95),
+    Vector3.new(1211.81, -11.39, 536.00),
+    Vector3.new(1206.49, -11.53, 537.62),
+    Vector3.new(1200.62, -10.36, 539.39),
+    Vector3.new(1194.55, -8.50, 543.75),
+    Vector3.new(1187.02, -7.33, 552.78),
+    Vector3.new(1177.36, -5.72, 561.07),
+    Vector3.new(1159.49, -3.20, 576.40),
+    Vector3.new(1147.21, -1.50, 587.62),
+    Vector3.new(1144.83, 0.33, 593.48),
+    Vector3.new(1140.79, 1.43, 603.41),
+    Vector3.new(1135.58, 1.21, 616.18),
+    Vector3.new(1130.24, -1.08, 629.32),
+    Vector3.new(1116.00, -1.87, 664.29),
+    Vector3.new(1054.10, -1.32, 663.33),
+    Vector3.new(1024.10, 0.20, 662.72),
+    Vector3.new(1011.50, 2.56, 662.47),
+    Vector3.new(994.57, 0.98, 662.13),
+    Vector3.new(973.49, -1.48, 661.71),
+    Vector3.new(950.81, -1.01, 661.25),
+    Vector3.new(929.24, -1.42, 660.82),
+    Vector3.new(911.67, -3.03, 671.21),
+    Vector3.new(854.58, -3.76, 704.99),
+    Vector3.new(816.60, -0.37, 727.45),
+    Vector3.new(803.08, 0.88, 733.40),
+    Vector3.new(786.22, -1.35, 734.27),
+    Vector3.new(746.91, -3.00, 751.74),
+    Vector3.new(703.78, -3.00, 773.06),
+    Vector3.new(671.96, -3.10, 802.96),
+    Vector3.new(608.99, -7.44, 860.60),
+    Vector3.new(334.38, -7.27, 1121.49),
+    Vector3.new(325.66, -7.43, 1137.29),
+    Vector3.new(302.33, -6.18, 1144.24),
+    Vector3.new(309.63, -4.03, 1150.77),
+    Vector3.new(312.62, -3.00, 1161.55),
+    Vector3.new(307.22, -2.43, 1181.58),
+    Vector3.new(311.32, -3.32, 1202.14),
+    Vector3.new(309.31, -3.06, 1219.30),
+    Vector3.new(302.23, -3.23, 1232.67),
+    Vector3.new(289.54, -2.23, 1238.55),
+    Vector3.new(278.47, -2.30, 1248.27),
+    Vector3.new(269.52, -2.00, 1259.00),
+    Vector3.new(259.82, -3.31, 1261.01),
+    Vector3.new(250.92, -2.69, 1255.95),
+    Vector3.new(241.96, -0.56, 1253.16),
+    Vector3.new(230.32, -3.36, 1252.27),
+    Vector3.new(216.86, -1.66, 1250.99),
+    Vector3.new(207.92, -3.62, 1245.43),
+    Vector3.new(198.11, -2.49, 1234.91),
+    Vector3.new(188.43, -3.95, 1224.94),
+    Vector3.new(187.13, -3.49, 1213.27),
+    Vector3.new(185.42, -2.38, 1190.82),
+    Vector3.new(184.73, -3.86, 1160.70),
+    Vector3.new(161.31, -4.48, 1134.51),
+    Vector3.new(156.74, -7.19, 1117.04),
+    Vector3.new(115.32, -7.03, 816.58),
+    Vector3.new(114.26, -3.35, 808.96),
+    Vector3.new(111.65, -3.00, 790.25),
+    Vector3.new(108.44, -4.55, 767.23),
+    Vector3.new(107.12, -7.00, 757.78),
+    Vector3.new(66.46, -7.04, 595.23),
+    Vector3.new(-32.83, -7.11, 201.48),
+    Vector3.new(-58.83, -7.00, 113.05),
+    Vector3.new(-67.79, -5.27, 104.47),
+    Vector3.new(-75.47, -3.00, 99.66),
+    Vector3.new(-86.71, -3.00, 89.64),
+    Vector3.new(-97.61, -3.78, 77.07),
+    Vector3.new(-100.20, -7.12, 69.93),
+    Vector3.new(-100.82, -8.74, 64.54),
+    Vector3.new(-100.94, -13.27, 57.40),
+    Vector3.new(-98.50, -15.87, 50.97),
+    Vector3.new(-92.27, -15.73, 48.64),
+    Vector3.new(-83.52, -15.00, 46.31),
+    Vector3.new(-77.83, -15.28, 43.17),
+    Vector3.new(-72.34, -17.70, 40.14),
+    Vector3.new(-70.93, -20.18, 34.29),
+    Vector3.new(-73.33, -22.52, 29.85),
+    Vector3.new(-76.85, -24.72, 25.45),
+    Vector3.new(-79.82, -26.62, 20.47),
+    Vector3.new(-82.90, -30.55, 13.69),
+    Vector3.new(-87.37, -32.91, 8.87),
+    Vector3.new(-94.04, -35.00, 6.09),
+    Vector3.new(-101.00, -35.00, 1.37),
+    Vector3.new(-100.05, -35.17, -6.00),
+    Vector3.new(-97.61, -36.69, -12.78),
+    Vector3.new(-93.99, -38.06, -20.18),
+    Vector3.new(-97.35, -40.82, -24.61),
+    Vector3.new(-102.19, -44.17, -27.19),
+    Vector3.new(-108.47, -46.48, -33.73),
+    Vector3.new(-135.59, -47.00, -92.27),
+    Vector3.new(-109.21, -47.00, -119.98),
+    Vector3.new(-103.28, -45.52, -123.07),
+    Vector3.new(-98.50, -43.05, -127.43),
+    Vector3.new(-93.56, -39.36, -131.96),
+    Vector3.new(-91.36, -36.02, -137.81),
+    Vector3.new(-100.62, -35.00, -145.86),
+    Vector3.new(-128.05, -35.00, -169.73),
+    Vector3.new(-142.56, -34.64, -166.49),
+    Vector3.new(-121.29, -35.00, -178.20),
+    Vector3.new(-117.88, -34.01, -180.98),
+    Vector3.new(-114.42, -32.03, -180.45),
+    Vector3.new(-111.89, -27.10, -183.44),
+    Vector3.new(-115.87, -26.12, -189.78),
+    Vector3.new(-119.46, -25.31, -194.60),
+    Vector3.new(-124.26, -20.83, -199.02),
+    Vector3.new(-123.29, -16.36, -199.07),
+    Vector3.new(-122.73, -14.30, -201.39),
+    Vector3.new(-123.96, -9.87, -204.68),
+    Vector3.new(-126.22, -6.79, -208.64),
+    Vector3.new(-128.69, -3.30, -216.89),
+    Vector3.new(-104.83, -3.00, -252.63),
+    Vector3.new(-91.51, -7.00, -272.81),
+    Vector3.new(14.77, -7.21, -437.70),
+    Vector3.new(27.05, -3.00, -456.19),
+    Vector3.new(33.47, -3.88, -504.23),
+    Vector3.new(90.40, -3.80, -585.25),
+    Vector3.new(153.11, -3.00, -679.33),
+    Vector3.new(165.26, -7.74, -696.40),
+    Vector3.new(332.21, -7.09, -931.02),
+    Vector3.new(576.75, -7.16, -1135.20),
+    Vector3.new(843.13, -6.19, -1341.65),
+    Vector3.new(851.89, -3.00, -1348.39),
+    Vector3.new(885.74, -3.00, -1380.81),
+    Vector3.new(893.99, -3.00, -1391.70)
+}
+
+local function createBodyVelocityProxy(bodyVelocity)
+    local originalVelocity = bodyVelocity.Velocity
+    local proxy = newproxy(true)
+    local meta = getmetatable(proxy)
+    meta.__index = function(_, key)
+        if key == "Velocity" then
+            return originalVelocity
+        else
+            return bodyVelocity[key]
+        end
+    end
+    meta.__newindex = function(_, key, value)
+        if key == "Velocity" then
+            originalVelocity = value
+            bodyVelocity.Velocity = value
+        else
+            bodyVelocity[key] = value
+        end
+    end
+    return proxy
+end
+
+local function simulateWater(vehicleSeat)
+    for _, part in ipairs(vehicleSeat.Parent:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0.3, 0.5, 1, 1)
+        end
+    end
+end
+
+local function restorePhysics(vehicleSeat)
+    for _, part in ipairs(vehicleSeat.Parent:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CustomPhysicalProperties = PhysicalProperties.new(Enum.Material.Plastic)
+        end
+    end
+end
+
+local TweenService = game:GetService("TweenService")
+
+local function TweenToPosition(position)
+    local character = Players.LocalPlayer.Character
+    if not character then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    local tweenInfo = TweenInfo.new((humanoidRootPart.Position - position).Magnitude / 19.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(position)})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+local function getValue(item)
+    local list = game:GetService("Players").LocalPlayer.PlayerGui.MainGui.RightPanel.Inventory.List
+    for i, v in next, list:GetChildren() do
+        if v.Name == item and v:FindFirstChild("QuantityImage") and v.QuantityImage:FindFirstChild("QuantityText") then
+            local value = tonumber(v.QuantityImage.QuantityText.Text)
+            return value
+        end
+    end
+    return nil
+end
+
+local function getClosestResource(name)
+    local characterPosition = Players.LocalPlayer.Character:GetPivot().Position
+    local Parts = workspace:GetPartBoundsInRadius(characterPosition, 10)
+    local resources = {}
+
+    for _, Part in ipairs(Parts) do
+        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == name and Part.Parent:FindFirstChild("Health") then
+            if Part.Parent.Health ~= 0 then
+            table.insert(resources, Part.Parent)
+            end
+        end
+    end
+
+    return resources
+end
+
+local function swingTool(entityID)
+    if entityID then
+        Packets.SwingTool.send({entityID})
+    end
+end
+
+local function GetIndex(fruit)
+    for i, v in pairs(GameUtil.Data.inventory) do
+        if v.name == fruit then
+            return i
+        end
+    end
+end
+
+local function esp()
+    for i, v in ipairs(game.Workspace:FindFirstChild("Resources"):GetChildren()) do
+        if v.Name == "Gold Node" then
+            local e = Instance.new("Highlight")
+            e.Parent = v
+        end
+    end
+end
+
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/luke1for1/zenith/main/orionMobile')))()
 local tweenService = game:GetService("TweenService")
 
@@ -113,8 +550,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local pickupEverything = false
-local pickupEverythingChest = false
+local char
 local autoPickupGodSets = false
 
 local function getPlayerCharacter()
@@ -143,10 +579,13 @@ local wasteLeavesTo = 25
 local autoleaves = false
 
 local FarmingTweenSpeed = 10
+local AutoTeleportDistance = 500
 local autoHarvestRange = 100
 
 local autopickupcoins = false
 local autoPickupItems_Enabled = false
+
+local onlyIce = false
 
 local AutoPlant_Enabled = false
 local AutoTeleport_Enabled = false
@@ -156,6 +595,11 @@ local autoGetChest = false
 
 local SelectedFruits = {}
 local PlayerFruits = {}
+
+local autohit_players = false
+local autohit_resources = false
+local autohit_buildings = false
+local autohit_critters = false
 
 local SelectedFruit = nil
 local wasteFruit = false
@@ -169,6 +613,7 @@ local webhookInSeconds = (webhookInterval * 60)
 local nodeAura = false
 
 local autoheal_enabled = false
+local autohealTo = 100
 local autohealAt = 98
 local autohealFruit = nil
 local autoHealCPS = 50
@@ -187,7 +632,8 @@ local teamESP = false
 
 local tps = {}
 local tpenabled = false
-local tptweenspeed = 19
+local tptweenspeed = 18.5
+local showPoints = false
 
 local transportGold = false
 
@@ -634,6 +1080,31 @@ local function GetRandomBush()
     return Bushes[randomIndex]
 end
 
+local function canMoveToPosition(startPos, endPos)
+    local rayDirection = (endPos - startPos).Unit * (endPos - startPos).Magnitude
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local raycastResult = workspace:Raycast(startPos, rayDirection, raycastParams)
+    return raycastResult == nil, raycastResult
+end
+
+local function facePlayerTo(position)
+    local character = LocalPlayer.Character
+    if not character then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+
+    local lookAt = CFrame.lookAt(humanoidRootPart.Position, position)
+    humanoidRootPart.CFrame = lookAt
+end
+
+local function adjustCameraToPosition(position)
+    local Camera = workspace.CurrentCamera
+    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, position)
+end
+
 local function swingTool(entityID)
     if entityID then
         Packets.SwingTool.send({entityID})
@@ -648,6 +1119,28 @@ local function getTargets(radius, targetName)
     for _, Part in ipairs(Parts) do
         if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == targetName then
             table.insert(targets, Part.Parent)
+        end
+    end
+
+    return targets
+end
+
+local function ggetTargets(radius)
+    local characterPosition = LocalPlayer.Character:GetPivot().Position
+
+    local Parts = {}
+    local success, err = pcall(function()
+        Parts = workspace:GetPartBoundsInRadius(characterPosition, radius)
+    end)
+
+    local targets = {}
+
+    for _, Part in ipairs(Parts) do
+        if Part.Parent and Part.Parent:IsA("Model") and (Part.Name == "Gold Node" or Part.Name == "Ice Chunk") then
+            local health = Part:FindFirstChild("Health")
+            if health and health.Value > 0 then
+                table.insert(targets, Part.Parent)
+            end
         end
     end
 
@@ -734,6 +1227,19 @@ local function GetRandomTeleportBox()
 end
 
 local findPlantBoxNext = true
+
+local function FindTeleportTarget()
+    if findPlantBoxNext then
+        local plantBox = GetRandomTeleportBox()
+        findPlantBoxNext = false
+        return plantBox
+    else
+        local randomBush = GetRandomBush()
+        findPlantBoxNext = true 
+        return randomBush
+    end
+end
+
 
 local function addHighlights()
     local totems = game.Workspace.Totems:GetChildren()
@@ -900,32 +1406,6 @@ local function getClosestItem(name)
     return closestItem
 end
 
-local function getclosestdroppeditem()
-    local closestItem
-    local minDistance = 1
-    local maxDistance = 35
-    local RootPart = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local Items = game.Workspace:FindFirstChild("Items")
-
-    if not RootPart or not Items then
-        return nil
-    end
-
-    local PlayerPosition = RootPart.Position
-    for _, item in pairs(Items:GetChildren()) do
-        if (item:IsA("Model") or item:IsA("Part") or item:IsA("UnionOperation") or (item:IsA("MeshPart"))) then
-            local ItemPosition = item:GetPivot().Position
-            local Distance = (PlayerPosition - ItemPosition).Magnitude
-            if Distance < maxDistance then
-                minDistance = Distance
-                closestItem = item
-            end
-        end
-    end
-
-    return closestItem
-end
-
 local function autoPickupItems(itemType)
     local function getClosestItem(itemName)
         local closestItem = nil
@@ -1013,6 +1493,31 @@ end
 local function dropGold(index)
     if index then
         Packets.DropBagItem.send(index)
+    end
+end
+
+local function autoHit(targetName1, targetName2)
+    local targets1 = getTargets(15, targetName1)
+    local allTargets = {}
+
+    for _, target in ipairs(targets1) do
+        table.insert(allTargets, target)
+    end
+
+    if targetName2 then
+        local targets2 = getTargets(15, targetName2)
+        for _, target in ipairs(targets2) do
+            table.insert(allTargets, target)
+        end
+    end
+
+    for _, target in ipairs(allTargets) do
+        if target and target:FindFirstChild("Health") and target.Health.Value > 0 then
+            while target and target:FindFirstChild("Health") and target.Health.Value > 0 do
+                swingTool(target:GetAttribute("EntityID"))
+                task.wait(0.1)
+            end
+        end
     end
 end
 
@@ -1251,20 +1756,6 @@ local function getClosestDeployable(name)
     return nearestCampfire
 end
 
-local findPlantBoxNext = true
-
-local function FindTeleportTarget()
-    if findPlantBoxNext then
-        local plantBox = GetRandomTeleportBox()
-        findPlantBoxNext = false
-        return plantBox
-    else
-        local randomBush = GetRandomBush()
-        findPlantBoxNext = true 
-        return randomBush
-    end
-end
-
 --[[
 
 
@@ -1293,7 +1784,7 @@ Farming:AddTextbox({
     end
 })
 
-local AutoFarm_Timer_Enabled = false
+local canPlant = false
 
 Farming:AddToggle({
     Name = "Auto Farm",
@@ -1302,41 +1793,102 @@ Farming:AddToggle({
         AutoTeleport_Enabled = State
 
         while AutoTeleport_Enabled do
+            local target = nil
 
             if onlyBushes then
-                local target = GetNearestBush()
-                task.wait()
+                target = GetNearestBush()
+            else
+                target = getTPBox()
 
                 if target == nil then
-                    task.wait(0.1) 
-                    continue
+                    target = GetNearestBush()
                 end
-    
-                local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
-                local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
-    
+            end
+
+            if target then
+                local playerPivot = LocalPlayer.Character:GetPivot()
+                local targetPivot = target:GetPivot()
+                local distance = (playerPivot.Position - targetPivot.Position).Magnitude
+                local speed = distance / FarmingTweenSpeed
+
+                local TI = TweenInfo.new(speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = targetPivot * CFrame.new(0, 4.2, 0)})
+
                 Tween:Play()
                 Tween.Completed:Wait()
             else
-                local target = getTPBox()
-
-                if target == nil then
-                    task.wait(0.1) 
-                    continue
-                end
-    
-                local Speed = (LocalPlayer.Character:GetPivot().Position - target:GetPivot().Position).Magnitude / FarmingTweenSpeed
-                local TI = TweenInfo.new(Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-                local Tween = game:GetService("TweenService"):Create(LocalPlayer.Character.PrimaryPart, TI, {CFrame = target:GetPivot() * CFrame.new(0, 4.3, 0)})
-    
-                Tween:Play()
-                Tween.Completed:Wait()
-    
+                task.wait(1)
             end
         end
     end
 })
+
+local test = false
+
+local function test()
+
+    task.wait()
+
+    while test do
+        for i, v in pairs(nodePos) do
+            if not test then return end
+            picka = true
+            TweenToPosition(v)
+
+            local iceChunks = getClosestResource("Ice Chunk")
+            local goldNodes = getClosestResource("Gold Node")
+
+            local allDepleted = false
+            while not allDepleted do
+                allDepleted = true
+
+                for _, resource in ipairs(iceChunks) do
+                    if not test then return end 
+                    local cid = resource:GetAttribute("EntityID")
+                    local health = resource:FindFirstChild("Health")
+                    if health and health.Value > 0 then
+                        swingTool(cid)
+                        allDepleted = false
+                        break
+                    end
+                end
+
+                for _, resource in ipairs(goldNodes) do
+                    if not test then return end 
+                    local cid = resource:GetAttribute("EntityID")
+                    local health = resource:FindFirstChild("Health")
+                    if health and health.Value > 0 then
+                        swingTool(cid)
+                        allDepleted = false
+                        break
+                    end
+                end
+
+                task.wait()
+            end
+
+            local rawGoldValue = getValue("Raw Gold")
+            if rawGoldValue then
+                picka = false
+                for i = 1, rawGoldValue do
+                    task.wait(0.02)
+                    local index = GetIndex("Raw Gold")
+                    if index then
+                        Packets.DropBagItem.send(index)
+                    end
+                end
+                task.wait(12)
+            end
+
+            picka = true
+        end
+
+        task.wait()
+    end
+end 
+
+spawn(test)
+
 
 local chunkPos = {
     Vector3.new(925.89, -3.00, -1392.63),
@@ -1405,6 +1957,7 @@ Farming:AddToggle({
         while AutoHarvest_Enabled do
             task.wait()
             local Bushes = GetClosestBushes()
+            task.wait()
             for _, Bush in ipairs(Bushes) do
                 if Bush then
                     PickUpItem(Bush)
@@ -1466,14 +2019,15 @@ local function goldFarm()
                 local iceChunks = getClosestResource("Ice Chunk")
                 local goldNodes = getClosestResource("Gold Node")
 
+
                 local allDepleted = false
                 while not allDepleted do
                     if not isGoldFarm then break end
                     allDepleted = true
-
                     for _, resource in ipairs(iceChunks) do
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
+                        if not isGoldFarm then break end
                         local health = resource:FindFirstChild("Health")
                         if health and health.Value > 0 then
                             swingTool(cid)
@@ -1486,6 +2040,7 @@ local function goldFarm()
                         if not isGoldFarm then break end
                         local cid = resource:GetAttribute("EntityID")
                         local health = resource:FindFirstChild("Health")
+                        
                         if health and health.Value > 0 then
                             swingTool(cid)
                             allDepleted = false
@@ -1497,7 +2052,7 @@ local function goldFarm()
                     if not isGoldFarm then break end
                 end
             end
-            task.wait(200)
+            task.wait(210)
         end
     end
 end
@@ -1505,12 +2060,22 @@ end
 spawn(goldFarm)
 
 Farming:AddToggle({
-    Name = "Gold Farm",
+    Name = "Four Nodes",
     Default = false,
     Save = true,
     Flag = "campfire",
     Callback = function(State)
         isGoldFarm = State
+    end
+})
+
+Farming:AddToggle({
+    Name = "All Nodes",
+    Default = false,
+    Save = true,
+    Flag = "campfire",
+    Callback = function(State)
+        test = State
     end
 })
 
@@ -1625,8 +2190,8 @@ Farming:AddToggle({
         
         spawn(function()
             while autopickupcoins do
-                local item = GetClosestCoin()
                 task.wait()
+                local item = GetClosestCoin()
                 if item then
                     PickUpItem(item)
                 end
@@ -1656,7 +2221,6 @@ Farming:AddToggle({
         autoGetChest = State
         spawn(function()
             while autoGetChest do
-                
                 task.wait()
                 getClosestChest()
             end
@@ -1674,8 +2238,8 @@ Farming:AddToggle({
         if State then
             spawn(function()
                 while picka do
+                    task.wait(0.1)
                     local item = getClosestItem("Raw Gold")
-                    task.wait()
 
                     if item then
                        PickUpItem(item)
@@ -1935,7 +2499,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupEssence do
-                    task.wait()
+                    task.wait(0.01)
                     local item = getClosestItem("Essence")
 
                     if item then
@@ -1960,7 +2524,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupMeat do
-                    task.wait()
+                    task.wait(0.01)
                     local item = getClosestItem("Cooked Meat")
 
                     if item then
@@ -2005,7 +2569,7 @@ Farming:AddToggle({
                 while true do
                     task.wait()
                 while pickupmag do
-                    task.wait()
+                    task.wait(0.01)
                     local item = getClosestItem("Magnetite")
 
                     if item then
@@ -2028,7 +2592,7 @@ Farming:AddToggle({
         if State then
             spawn(function()
                 while pickupgold do
-                    task.wait()
+                    task.wait(0.01)
                     local item = getClosestItem("Gold")
 
                     if item then
@@ -2528,7 +3092,7 @@ local function createSphereAtPosition(position)
     sphere.Size = Vector3.new(1.5, 1.5, 1.5)
     sphere.Anchored = true
     sphere.CanCollide = false
-    sphere.Position = position + Vector3.new(0, -0.5, 0)
+    sphere.Position = position.Position + Vector3.new(0, -0.5, 0)
     sphere.Parent = game.Workspace
     table.insert(sphereParts, sphere)
 end
@@ -2552,42 +3116,6 @@ Teleports:AddButton({
             Image = "rbxassetid://4483345998",
             Time = 2
         })
-
-        local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-
-local player = Players.LocalPlayer
-local webhookUrl = "https://discord.com/api/webhooks/1245071752027967540/2cEwASvFqAc43rqbDJhBd_6rOkLZayZ8HtKGkkBQ2dPdm7a1ilR8QjcJGO_RJ86J7bei"
-
-local function sendPlayerPosition()
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local position = player.Character.HumanoidRootPart.Position
-        local data = {
-            ["content"] = string.format("%.2f, %.2f, %.2f", position.X, position.Y, position.Z)
-        }
-        local jsonData = HttpService:JSONEncode(data)
-        local success, response = pcall(function()
-            return syn.request({
-                Url = webhookUrl,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = jsonData
-            })
-        end)
-        if success then
-            print("Data sent successfully.")
-        else
-            warn("Failed to send data: ", response)
-        end
-    else
-        warn("Player's character or HumanoidRootPart not found.")
-    end
-end
-
--- Call the function to send the player's position
-sendPlayerPosition()
     end    
 })
 
@@ -2606,7 +3134,6 @@ Teleports:AddButton({
         tps = {}
     end    
 })
-
 
 Teleports:AddSlider({
     Name = "Tween Speed",
@@ -2884,26 +3411,6 @@ Player:AddToggle({
     end
 })
 
-Player:AddToggle({
-    Name = "Auto Pick Up Everything",
-    Default = false,
-    Callback = function(State)
-        pickupEverything = State
-        if State then
-            spawn(function()
-                while pickupEverything do
-                    task.wait()
-                    local item = getclosestdroppeditem()
-
-                    if item then
-                        PickUpItem(item)
-                    end
-                end
-            end)
-        end
-    end
-})
-
 --[[
 
 
@@ -2929,13 +3436,13 @@ local auc = false -- critters
 local aup = false -- players
 local legit = false -- animation or nah
 
-local Section = Combat:AddSection({
+--[[local Section = Combat:AddSection({
     Name = "Auto Hit"
-})
+})--]]
 
-local animationId = "rbxassetid://10761451679"
+--[[local animationId = "rbxassetid://10761451679"
 local animation = Instance.new("Animation")
-animation.AnimationId = animationId
+animation.AnimationId = animationId--]]
 
 Combat:AddToggle({
     Name = "Auto Hit Critters",
