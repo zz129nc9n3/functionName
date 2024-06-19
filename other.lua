@@ -1,12 +1,7 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Packets = require(ReplicatedStorage.Modules.Packets)
-local GameUtil = require(ReplicatedStorage.Modules.GameUtil)
 
 local nodePos = {
     Vector3.new(916.30, -3.00, -1391.05),
@@ -385,6 +380,7 @@ local function TweenToPosition(position)
     tween.Completed:Wait()
 end
 
+
 local function getValue(item)
     local list = game:GetService("Players").LocalPlayer.PlayerGui.MainGui.RightPanel.Inventory.List
     for i, v in next, list:GetChildren() do
@@ -415,14 +411,6 @@ end
 local function swingTool(entityID)
     if entityID then
         Packets.SwingTool.send({entityID})
-    end
-end
-
-local function GetIndex(fruit)
-    for i, v in pairs(GameUtil.Data.inventory) do
-        if v.name == fruit then
-            return i
-        end
     end
 end
 
@@ -553,22 +541,18 @@ local LocalPlayer = Players.LocalPlayer
 local char
 local autoPickupGodSets = false
 
-local function getPlayerCharacter()
-    if LocalPlayer.Character then
-        return LocalPlayer.Character
-    end
-
-    local character
-    LocalPlayer.CharacterAdded:Wait()
-    character = LocalPlayer.Character
-
-    return character
-end
-
 local Packets = require(ReplicatedStorage.Modules.Packets)
 local ItemData = require(ReplicatedStorage.Modules.ItemData)
 local ItemIDS = require(ReplicatedStorage.Modules.ItemIDS)
 local GameUtil = require(ReplicatedStorage.Modules.GameUtil)
+
+local function GetIndex(fruit)
+    for i, v in pairs(GameUtil.Data.inventory) do
+        if v.name == fruit then
+            return i
+        end
+    end
+end
 
 local wwenabled = false
 local wwspeed = 16
@@ -584,8 +568,6 @@ local autoHarvestRange = 100
 
 local autopickupcoins = false
 local autoPickupItems_Enabled = false
-
-local onlyIce = false
 
 local AutoPlant_Enabled = false
 local AutoTeleport_Enabled = false
@@ -652,13 +634,6 @@ local autoCampfire_Enabled = false
 local autoCoinPress_Enabled = false
 local autoSmelt_Enabled = false
 local autoPickupGold_Enabled = false
-
-local onlyIcePos = {
-    CFrame.new(946.4, 6.7, -1433.3),
-    CFrame.new(912.2, 6.7, -1417.8),
-    CFrame.new(919.9, 6.3, -1386.1),
-    CFrame.new(964.4, 6.7, -1391.2),
-}
 
 local tpinverval = 10
 
@@ -859,14 +834,6 @@ local function PickUpChest(item)
     Packets.Pickup.send(eid)
 end
 
-local function GetIndex(name)
-    for i,v in pairs(GameUtil.Data.inventory) do
-        if v.name == name then
-            return i
-        end
-    end
-end
-
 local function getHumanoidRootPart()
     local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     return character:WaitForChild("HumanoidRootPart")
@@ -932,44 +899,6 @@ local allowedBushNames = {
     "Strangefruit Tree",
     "Pumpkin Patch Crop"
 }
-
-function startAutoHit()
-    if isrunning then return end
-    isrunning = true
-    attackLoop = coroutine.create(function()
-        while isrunning do
-            RunService.PostSimulation:Wait()
-            if not autohit_enabled then
-                break
-            end
-            local root = getHumanoidRootPart()
-            if not root then
-                continue
-            end
-
-            local attackparts = autoHit(root, autohit_range)
-            for i, part in ipairs(attackparts) do
-
-            end
-
-            if #attackparts > 0 then
-                hit(attackparts)
-            else
-
-            end
-        end
-    end)
-
-    coroutine.resume(attackLoop)
-end
-
-function stopAutoHit()
-    isrunning = false
-    if attackLoop then
-        coroutine.close(attackLoop)
-        attackLoop = nil
-    end
-end
 
 local function HasFruit(Box)
     return Box:FindFirstChild("Seed")
@@ -1080,31 +1009,6 @@ local function GetRandomBush()
     return Bushes[randomIndex]
 end
 
-local function canMoveToPosition(startPos, endPos)
-    local rayDirection = (endPos - startPos).Unit * (endPos - startPos).Magnitude
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-    local raycastResult = workspace:Raycast(startPos, rayDirection, raycastParams)
-    return raycastResult == nil, raycastResult
-end
-
-local function facePlayerTo(position)
-    local character = LocalPlayer.Character
-    if not character then return end
-    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then return end
-
-    local lookAt = CFrame.lookAt(humanoidRootPart.Position, position)
-    humanoidRootPart.CFrame = lookAt
-end
-
-local function adjustCameraToPosition(position)
-    local Camera = workspace.CurrentCamera
-    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, position)
-end
-
 local function swingTool(entityID)
     if entityID then
         Packets.SwingTool.send({entityID})
@@ -1119,28 +1023,6 @@ local function getTargets(radius, targetName)
     for _, Part in ipairs(Parts) do
         if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == targetName then
             table.insert(targets, Part.Parent)
-        end
-    end
-
-    return targets
-end
-
-local function ggetTargets(radius)
-    local characterPosition = LocalPlayer.Character:GetPivot().Position
-
-    local Parts = {}
-    local success, err = pcall(function()
-        Parts = workspace:GetPartBoundsInRadius(characterPosition, radius)
-    end)
-
-    local targets = {}
-
-    for _, Part in ipairs(Parts) do
-        if Part.Parent and Part.Parent:IsA("Model") and (Part.Name == "Gold Node" or Part.Name == "Ice Chunk") then
-            local health = Part:FindFirstChild("Health")
-            if health and health.Value > 0 then
-                table.insert(targets, Part.Parent)
-            end
         end
     end
 
@@ -1737,25 +1619,6 @@ local function getTPBox()
     return nearestCampfire
 end
 
-local function getClosestDeployable(name)
-    local characterPosition = LocalPlayer.Character:GetPivot().Position
-    local Parts = workspace.Deployables:GetPartBoundsInRadius(characterPosition, 50)
-    local nearestCampfire = nil
-    local shortestDistance = math.huge
-
-    for _, Part in ipairs(Parts) do
-        if Part.Parent and Part.Parent:IsA("Model") and Part.Parent.Name == name then
-            local distance = (Part.Position - characterPosition).Magnitude
-            if distance < shortestDistance then
-                shortestDistance = distance
-                nearestCampfire = Part.Parent
-            end
-        end
-    end
-
-    return nearestCampfire
-end
-
 --[[
 
 
@@ -1783,8 +1646,6 @@ Farming:AddTextbox({
         parseFruitInput(Value)
     end
 })
-
-local canPlant = false
 
 Farming:AddToggle({
     Name = "Auto Farm",
@@ -1824,13 +1685,19 @@ Farming:AddToggle({
 })
 
 local test = false
+local picka = false
 
 local function test()
+
+    while true do
 
     task.wait()
 
     while test do
+        picka = true
+        
         for i, v in pairs(nodePos) do
+            task.wait()
             if not test then return end
             picka = true
             TweenToPosition(v)
@@ -1867,28 +1734,26 @@ local function test()
                 task.wait()
             end
 
-            local rawGoldValue = getValue("Raw Gold")
-            if rawGoldValue then
-                picka = false
-                for i = 1, rawGoldValue do
-                    task.wait(0.02)
-                    local index = GetIndex("Raw Gold")
-                    if index then
-                        Packets.DropBagItem.send(index)
-                    end
-                end
-                task.wait(12)
-            end
-
-            picka = true
         end
 
-        task.wait()
+        local rawGoldValue = getValue("Raw Gold")
+        if rawGoldValue then
+            picka = false
+            for i = 1, rawGoldValue do
+                task.wait(0.1)
+                local index = GetIndex("Raw Gold")
+                if index then
+                    Packets.DropBagItem.send(index)
+                end
+            end
+            task.wait(16)
+        end
+
     end
+  end
 end 
 
 spawn(test)
-
 
 local chunkPos = {
     Vector3.new(925.89, -3.00, -1392.63),
@@ -2228,8 +2093,6 @@ Farming:AddToggle({
     end
 })
 
-local picka = false
-
 Farming:AddToggle({
     Name = "Pick Up Raw Gold",
     Default = false,
@@ -2238,7 +2101,7 @@ Farming:AddToggle({
         if State then
             spawn(function()
                 while picka do
-                    task.wait(0.1)
+                    task.wait()
                     local item = getClosestItem("Raw Gold")
 
                     if item then
@@ -2409,7 +2272,6 @@ local autohit_critters = false
 local pickupMeat = false
 local pickupEssence = false
 local pickupmag = false
-local rapeMag = false
 
 Farming:AddToggle({
     Name = "Hit Servants",
@@ -2619,161 +2481,6 @@ $$ |   $$ |  $$ |  $$ /  \__|$$ |  $$ |$$ /  $$ |$$ |
                                                                                                                 
 --]]
 
-
-local Section = Visual:AddSection({
-    Name = "Visual Settings"
-})
-
-Visual:AddColorpicker({
-    Name = "ESP Fill Color",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        espChamColor = Value
-    end
-})
-
-Visual:AddColorpicker({
-    Name = "ESP Outline Color",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        espOutlineColor = Value
-    end
-})
-
-Visual:AddToggle({
-    Name = "Player ESP",
-    Default = false,
-    Callback = function(Value)
-        esp = Value
-
-        local function addHighlightPlayer(character)
-            if not character:FindFirstChildOfClass("Highlight") then
-                local highlight = Instance.new("Highlight", character)
-                highlight.FillColor = espChamColor
-                highlight.FillTransparency = 0.1
-                highlight.OutlineColor = espOutlineColor
-                highlight.OutlineTransparency = 0
-            end
-        end
-
-        local function removeHighlightPlayer(character)
-            local highlight = character:FindFirstChildOfClass("Highlight")
-            if highlight then
-                highlight:Destroy()
-            end
-        end
-
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                if esp then
-                    addHighlightPlayer(character)
-                else
-                    removeHighlightPlayer(character)
-                end
-            end
-        end
-
-        Players.PlayerAdded:Connect(function(player)
-            player.CharacterAdded:Connect(function(character)
-                if esp then
-                    addHighlightPlayer(character)
-                end
-            end)
-            if player.Character and esp then
-                addHighlightPlayer(player.Character)
-            end
-        end)
-
-        Players.PlayerRemoving:Connect(function(player)
-            if player.Character then
-                removeHighlightPlayer(player.Character)
-            end
-        end)
-    end
-})
-
-Visual:AddToggle({
-    Name = "Totem ESP",
-    Default = false,
-    Callback = function(Value)
-        totemESP = Value
-        if totemESP then
-            addHighlights()
-        else
-            removeHighlights()
-        end
-    end
-})
-
-local Section = Visual:AddSection({
-    Name = "Specific Team"
-})
-
-Visual:AddDropdown({
-    Name = "Select Team Color",
-    Default = "",
-    Options = teamColors,
-    Callback = function(selectedColor)
-        selectedTeamColor = selectedColor
-    end    
-})
-
-Visual:AddToggle({
-    Name = "Team ESP",
-    Default = false,
-    Callback = function(Value)
-        esp = Value
-
-        local function addHighlightPlayer(player)
-            local character = player.Character
-            if character and player.TeamColor.Name == selectedTeamColor then
-                if not character:FindFirstChildOfClass("Highlight") then
-                    local highlight = Instance.new("Highlight", character)
-                    highlight.FillColor = espChamColor
-                    highlight.FillTransparency = 0.1
-                    highlight.OutlineColor = espOutlineColor
-                    highlight.OutlineTransparency = 0
-                end
-            end
-        end
-
-        local function removeHighlightPlayer(player)
-            local character = player.Character
-            if character then
-                local highlight = character:FindFirstChildOfClass("Highlight")
-                if highlight then
-                    highlight:Destroy()
-                end
-            end
-        end
-
-        for _, player in ipairs(Players:GetPlayers()) do
-            if esp then
-                addHighlightPlayer(player)
-            else
-                removeHighlightPlayer(player)
-            end
-        end
-
-        Players.PlayerAdded:Connect(function(player)
-            player.CharacterAdded:Connect(function(character)
-                if esp then
-                    addHighlightPlayer(player)
-                end
-            end)
-            if player.Character and esp then
-                addHighlightPlayer(player)
-            end
-        end)
-
-        Players.PlayerRemoving:Connect(function(player)
-            if player.Character then
-                removeHighlightPlayer(player)
-            end
-        end)
-    end
-})
 --[[
 
     
@@ -2931,8 +2638,6 @@ $$ |   $$$$$$$$\ $$$$$$$$\ $$$$$$$$\ $$ |       $$$$$$  |$$ |  $$ |  $$ |   \$$$
                                                                                         
                                                                                                                                                                     
 --]]
-
-
 
 local function TeleportLoop()
     while tpenabled do
@@ -3187,14 +2892,6 @@ $$ |      $$$$$$$$\ $$ |  $$ |   $$ |    $$$$$$$$\ $$ |  $$ |
                                                                                                                         
 --]]
 
-local function GetIndex(fruit)
-    for i, v in pairs(GameUtil.Data.inventory) do
-        if v.name == fruit then
-            return i
-        end
-    end
-end
-
 local function startAutoHeal()
     spawn(function()
         while autoheal_enabled do
@@ -3426,23 +3123,9 @@ $$ |  $$\ $$ |  $$ |$$ |\$  /$$ |$$ |  $$ |$$ |  $$ |  $$ |
                                                     
 ]]
 
-local dep = workspace:WaitForChild("Deployables")
-local cri = workspace:WaitForChild("Critters")
-local res = workspace:WaitForChild("Resources")
-
 local aus = false -- structures
 local aur = false -- resoruces
 local auc = false -- critters
-local aup = false -- players
-local legit = false -- animation or nah
-
---[[local Section = Combat:AddSection({
-    Name = "Auto Hit"
-})--]]
-
---[[local animationId = "rbxassetid://10761451679"
-local animation = Instance.new("Animation")
-animation.AnimationId = animationId--]]
 
 Combat:AddToggle({
     Name = "Auto Hit Critters",
@@ -3637,15 +3320,6 @@ Combat:AddToggle({
         end
     end
 })--]]
-
-
-Combat:AddToggle({
-    Name = "Legit",
-    Default = false,
-    Callback = function(State)
-        legit = State
-    end
-})
 
 --[[if game.Workspace:FindFirstChild('Pro') and game.Workspace:FindFirstChild('Pro'):IsA('Folder') then
     game.Players.LocalPlayer:Kick("Executed UI more than 1 time, rejoin please")
