@@ -374,7 +374,7 @@ local function TweenToPosition(position)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
 
-    local tweenInfo = TweenInfo.new((humanoidRootPart.Position - position).Magnitude / 19.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+    local tweenInfo = TweenInfo.new((humanoidRootPart.Position - position).Magnitude / 18.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
     local tween = TweenService:Create(humanoidRootPart, tweenInfo, {CFrame = CFrame.new(position)})
     tween:Play()
     tween.Completed:Wait()
