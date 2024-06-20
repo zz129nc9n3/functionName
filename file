@@ -484,7 +484,9 @@ local allowedBushNames = {
     "Jelly Crop",
     "Oddberry Tree",
     "Strangefruit Tree",
-    "Pumpkin Patch Crop"
+    "Pumpkin Patch Crop",
+"Coconut Tree",
+"Corn Bushel"
 }
 
 function startAutoHit()
